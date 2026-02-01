@@ -1,0 +1,153 @@
+### Get users
+GET http://localhost:4111/api/v1/admin/users
+Accept: application/json
+Authorization: Basic YWRtaW46YWRtaW4=
+
+{}
+
+### Get users
+GET http://localhost:4111/api/v1/admin/users
+Accept: application/json
+Authorization: Basic YWRtaW46YWRtaW4=
+
+{}
+
+### Delete user
+DELETE http://localhost:4111/api/v1/admin/users/130
+Accept: application/json
+Authorization: Basic YWRtaW46YWRtaW4=
+
+{}
+
+
+### Create user 1
+POST http://localhost:4111/api/v1/admin/users
+Content-Type: application/json
+Accept: application/json
+Authorization: Basic YWRtaW46YWRtaW4=
+
+{
+  "username": "newuser",
+  "password": "password123",
+  "role": "USER"
+}
+
+### Get Token
+
+POST http://localhost:4111/api/v1/auth/login
+Content-Type: application/json
+Accept: application/json
+
+{
+  "username": "admin",
+  "password": "admin"
+}
+
+### Get Token
+
+POST http://localhost:4111/api/v1/auth/login
+Content-Type: application/json
+Accept: application/json
+
+{
+  "username": "newuser",
+  "password": "password123"
+}
+
+
+
+### Создать аккаунт
+POST http://localhost:4111/api/v1/accounts
+Accept: application/json
+Authorization: Basic bmV3dXNlcjpwYXNzd29yZDEyMw==
+
+
+### Добавить деньги на аккаунт
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: application/json
+Accept: application/json
+Authorization: Basic c2FzaGE6c2FzaGE=
+
+{
+  "id": 1,
+  "accountNumber": "ACC1",
+  "balance": 200.0
+}
+
+
+### Create user 2
+POST http://localhost:4111/api/v1/admin/users
+Content-Type: application/json
+Accept: application/json
+Authorization: Basic YWRtaW46bXlzZWN1cmVwYXNzd29yZA==
+
+{
+  "username": "newuser2",
+  "password": "password124",
+  "role": "USER"
+}
+
+###
+POST http://localhost:4111/api/v1/accounts
+Content-Type: application/json
+Accept: application/json
+Authorization: Basic c2FzaGE6c2FzaGE=
+
+###
+GET http://localhost:4111/api/v1/accounts/1
+Content-Type: application/json
+Accept: application/json
+Authorization: Basic c2FzaGE6c2FzaGE=
+
+
+### Добавить деньги на аккаунт
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: application/json
+Accept: application/json
+Authorization: Basic c2FzaGE6c2FzaGE=
+
+{
+  "id": 1,
+  "accountNumber": "ACC1",
+  "balance": 100.0
+}
+
+### Отправка денег на аккаунт
+
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: application/json
+Accept: application/json
+Authorization: Basic c2FzaGE6c2FzaGE=
+
+{
+  "senderAccountId": 1,
+  "receiverAccountId": 7,
+  "amount": 200.0
+}
+
+###
+GET http://localhost:4111/api/v1/customer/accounts
+Accept: application/json
+Authorization: Basic c2FzaGE6c2FzaGE=
+
+
+###
+GET http://localhost:4111/api/v1/customer/profile
+Accept: application/json
+Authorization: Basic bmV3dXNlcjpwYXNzd29yZDEyMw==
+
+###
+PUT http://localhost:4111/api/v1/customer/profile
+Content-Type: application/json
+Accept: application/json
+Authorization: Basic bmV3dXNlcjpwYXNzd29yZDEyMw==
+
+{
+  "name": "John Smith"
+}
+
+
+###
+GET http://localhost:4111/api/v1/accounts/2
+Accept: application/json
+Authorization: Basic bmV3dXNlcjI6cGFzc3dvcmQxMjQ=

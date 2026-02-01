@@ -1,0 +1,6 @@
+pytest
+requests
+pydantic
+softest
+rstr
+pytest-playwright
