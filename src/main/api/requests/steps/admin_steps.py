@@ -24,7 +24,7 @@ class AdminSteps(BaseSteps):
         return CrudRequester(
             RequestSpecs.admin_auth_spec(),
             Endpoint.ADMIN_USER,
-            ResponseSpecs.request_returns_bad_request(error_key, error_value)
+            ResponseSpecs.request_returns_bad_request_multiple_errors(error_key, error_value)
         ).post(create_user_request)
 
     def login(self, login_user_request: LoginUserRequest = LoginUserRequest(username='admin', password='admin')):

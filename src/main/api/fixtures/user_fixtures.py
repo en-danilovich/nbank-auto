@@ -15,3 +15,8 @@ def user_request(api_manager: ApiManager):
 @pytest.fixture
 def admin_user_request():
     return CreateUserRequest(username='admin', password='admin', role='ADMIN')
+
+
+@pytest.fixture(scope='function')
+def account_data(api_manager: ApiManager, user_request: CreateUserRequest):
+    return api_manager.user_steps.create_account(user_request)

@@ -4,7 +4,10 @@ import rstr
 import random
 from typing import Any, Annotated, get_type_hints, get_origin, get_args
 
-from src.main.api.generators.generating_rule import GeneratingRule
+from src.main.api.generators.generating_rule import RegexGeneratingRule, MinMaxFloatGeneratingRule
+from faker import Faker
+
+faker = Faker()
 
 
 class RandomModelGenerator:
@@ -20,10 +23,12 @@ class RandomModelGenerator:
             if get_origin(annotated_type) is Annotated:
                 actual_type, *annotations = get_args(annotated_type)
                 for ann in annotations:
-                    if isinstance(ann, GeneratingRule):
+                    if isinstance(ann, (RegexGeneratingRule, MinMaxFloatGeneratingRule)):
                         rule = ann
-            if rule:
+            if rule and isinstance(rule, RegexGeneratingRule):
                 value = RandomModelGenerator._generate_from_regex(rule.regex, actual_type)
+            elif rule and isinstance(rule, MinMaxFloatGeneratingRule):
+                value = RandomModelGenerator._generate_float(rule.min, rule.max, rule.right_digits)
             else:
                 value = RandomModelGenerator._generate_value(actual_type)
 
@@ -39,6 +44,10 @@ class RandomModelGenerator:
         if field_type is float:
             return float(generated)
         return generated
+
+    @staticmethod
+    def _generate_float(min_val: float, max_val: float, right_digits=2) -> float:
+        return faker.pyfloat(min_value=min_val, max_value=max_val, right_digits=right_digits)
     
     @staticmethod
     def _generate_value(field_type: type) -> Any:
