@@ -7,6 +7,8 @@ from src.main.api.models.accounts.account_deposit_response import AccountDeposit
 from src.main.api.models.create_account_response import CreateAccountResponse
 from src.main.api.models.create_user_request import CreateUserRequest
 from src.main.api.models.create_user_response import CreateUserResponse
+from src.main.api.models.customer.update_customer_profile_request import UpdateCustomerProfileRequest
+from src.main.api.models.customer.update_customer_profile_response import UpdateCustomerProfileResponse
 from src.main.api.models.login_user_request import LoginUserRequest
 from src.main.api.models.login_user_response import LoginUserResponse
 from src.main.api.models.base_model import BaseModel
@@ -60,4 +62,10 @@ class Endpoint(Enum):
         url='/accounts/deposit',
         request_model=AccountDepositRequest,
         response_model=AccountDepositResponse,
+    )
+
+    UPDATE_CUSTOMER_PROFILE = EndpointConfig(
+        url='/customer/profile',
+        request_model=UpdateCustomerProfileRequest,
+        response_model=UpdateCustomerProfileResponse,
     )

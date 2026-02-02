@@ -5,6 +5,8 @@ from src.main.api.models.accounts.account_deposit_request import AccountDepositR
 from src.main.api.models.accounts.account_deposit_response import AccountDepositResponse
 from src.main.api.models.create_user_request import CreateUserRequest
 from src.main.api.models.comparison.model_assertions import ModelAssertions
+from src.main.api.models.customer.update_customer_profile_request import UpdateCustomerProfileRequest
+from src.main.api.models.customer.update_customer_profile_response import UpdateCustomerProfileResponse
 from src.main.api.requests.skeleton.requesters.crud_requester import CrudRequester
 from src.main.api.requests.skeleton.requesters.validated_crud_requester import ValidatedCrudRequester
 from src.main.api.requests.skeleton.endpoint import Endpoint
@@ -106,3 +108,28 @@ class UserSteps(BaseSteps):
             Endpoint.ACCOUNTS_DEPOSIT,
             ResponseSpecs.internal_server_error()
         ).post(account_deposit_request)
+
+    def update_profile(self, user_request: CreateUserRequest, update_customer_profile_request: UpdateCustomerProfileRequest) -> UpdateCustomerProfileResponse:
+        update_customer_profile_response: UpdateCustomerProfileResponse = ValidatedCrudRequester(
+            RequestSpecs.auth_as_user(user_request.username, user_request.password),
+            Endpoint.UPDATE_CUSTOMER_PROFILE,
+            ResponseSpecs.request_returns_ok()
+        ).update(update_customer_profile_request)
+
+        ModelAssertions(update_customer_profile_response.customer, user_request).match()
+
+        assert update_customer_profile_response.message == "Profile updated successfully"
+        assert update_customer_profile_response.customer.name == update_customer_profile_request.name, (
+            f"Incorrect '{update_customer_profile_response.customer.username}' customer.name, expected '{update_customer_profile_request.name}'"
+        )
+
+        return update_customer_profile_response
+
+    def update_profile_using_invalid_data(self, user_request: CreateUserRequest,
+                                          update_customer_profile_request: UpdateCustomerProfileRequest,
+                                          error_message: str):
+        CrudRequester(
+            RequestSpecs.auth_as_user(user_request.username, user_request.password),
+            Endpoint.UPDATE_CUSTOMER_PROFILE,
+            ResponseSpecs.request_returns_bad_request_with_text(error_message)
+        ).update(update_customer_profile_request)
