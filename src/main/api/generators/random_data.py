@@ -34,3 +34,7 @@ class RandomData:
     @staticmethod
     def get_int(min_val, max_val) -> int:
         return faker.pyint(min_value=min_val, max_value=max_val)
+
+    @staticmethod
+    def get_float(min_val, max_val) -> float:
+        return faker.pyfloat(min_value=min_val, max_value=max_val)

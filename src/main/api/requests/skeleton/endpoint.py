@@ -4,9 +4,12 @@ from typing import List
 
 from src.main.api.models.accounts.account_deposit_request import AccountDepositRequest
 from src.main.api.models.accounts.account_deposit_response import AccountDepositResponse
+from src.main.api.models.accounts.account_transfer_request import AccountTransferRequest
+from src.main.api.models.accounts.account_transfer_response import AccountTransferResponse
 from src.main.api.models.create_account_response import CreateAccountResponse
 from src.main.api.models.create_user_request import CreateUserRequest
 from src.main.api.models.create_user_response import CreateUserResponse
+from src.main.api.models.customer.get_customer_profile_response import GetCustomerProfileResponse
 from src.main.api.models.customer.update_customer_profile_request import UpdateCustomerProfileRequest
 from src.main.api.models.customer.update_customer_profile_response import UpdateCustomerProfileResponse
 from src.main.api.models.login_user_request import LoginUserRequest
@@ -64,8 +67,20 @@ class Endpoint(Enum):
         response_model=AccountDepositResponse,
     )
 
+    ACCOUNTS_TRANSFER = EndpointConfig(
+        url='/accounts/transfer',
+        request_model=AccountTransferRequest,
+        response_model=AccountTransferResponse,
+    )
+
     UPDATE_CUSTOMER_PROFILE = EndpointConfig(
         url='/customer/profile',
         request_model=UpdateCustomerProfileRequest,
         response_model=UpdateCustomerProfileResponse,
+    )
+
+    GET_CUSTOMER_PROFILE = EndpointConfig(
+        url='/customer/profile',
+        request_model=None,
+        response_model=GetCustomerProfileResponse,
     )
