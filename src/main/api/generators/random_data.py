@@ -1,4 +1,6 @@
 import random
+import sys
+
 from faker import Faker
 
 faker = Faker()
@@ -38,3 +40,7 @@ class RandomData:
     @staticmethod
     def get_float(min_val, max_val) -> float:
         return faker.pyfloat(min_value=min_val, max_value=max_val)
+
+    @staticmethod
+    def get_invalid_account_id():
+        return faker.pyint(min_value=999999, max_value=sys.maxsize)

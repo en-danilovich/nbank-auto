@@ -7,8 +7,7 @@ from src.main.api.models.accounts.account_transfer_request import AccountTransfe
 from src.main.api.models.accounts.account_transfer_response import AccountTransferResponse
 from src.main.api.models.create_user_request import CreateUserRequest
 from src.main.api.models.comparison.model_assertions import ModelAssertions
-from src.main.api.models.create_user_response import CreateUserResponse
-from src.main.api.models.customer.get_customer_profile_response import GetCustomerProfileResponse
+from src.main.api.models.customer.get_customer_profile_response import GetCustomerProfileResponse, GetCustomerAccount
 from src.main.api.models.customer.update_customer_profile_request import UpdateCustomerProfileRequest
 from src.main.api.models.customer.update_customer_profile_response import UpdateCustomerProfileResponse
 from src.main.api.requests.skeleton.requesters.crud_requester import CrudRequester
@@ -143,27 +142,53 @@ class UserSteps(BaseSteps):
             ResponseSpecs.request_returns_bad_request_with_text(error_message)
         ).update(update_customer_profile_request)
 
+    def transfer_money_to_account(self, sender_user_request: CreateUserRequest, transfer_request: AccountTransferRequest,
+                                  receiver_user_request: Optional[CreateUserRequest] = None) -> AccountTransferResponse:
+        if receiver_user_request is None:
+            receiver_user_request = sender_user_request
+        sender_balance_before_transfer = self._get_account_data_from_profile(self.get_profile(sender_user_request),
+                                                                             transfer_request.senderAccountId).balance
+        receiver_balance_before_transfer = self._get_account_data_from_profile(self.get_profile(receiver_user_request),
+                                                                               transfer_request.receiverAccountId).balance
 
-    def transfer_money_to_account(self, user_request: CreateUserRequest, transfer_request: AccountTransferRequest) -> AccountTransferResponse:
         transfer_response: AccountTransferResponse = ValidatedCrudRequester(
-            RequestSpecs.auth_as_user(user_request.username, user_request.password),
+            RequestSpecs.auth_as_user(sender_user_request.username, sender_user_request.password),
             Endpoint.ACCOUNTS_TRANSFER,
             ResponseSpecs.request_returns_ok()
         ).post(transfer_request)
 
         ModelAssertions(transfer_request, transfer_response).match()
-
         assert transfer_response.message == "Transfer successful"
+
+        sender_balance_after_transfer = self._get_account_data_from_profile(self.get_profile(sender_user_request),
+                                                                            transfer_request.senderAccountId).balance
+        assert sender_balance_before_transfer - transfer_request.amount == sender_balance_after_transfer, (
+            f"Verify correct balance was withdrawn from account '{transfer_request.senderAccountId}' for user '{sender_user_request.username}'"
+        )
+
+        receiver_balance_after_transfer = self._get_account_data_from_profile(self.get_profile(receiver_user_request),
+                                                                              transfer_request.receiverAccountId).balance
+        assert receiver_balance_before_transfer + transfer_request.amount == receiver_balance_after_transfer, (
+            f"Verify correct balance was added to account '{transfer_request.receiverAccountId}' for user '{receiver_user_request.username}'"
+        )
 
         return transfer_response
 
     def transfer_money_to_account_invalid_data(self, user_request: CreateUserRequest,
                                                transfer_request: AccountTransferRequest,
                                                error_message: str):
-        response = CrudRequester(
+        CrudRequester(
             RequestSpecs.auth_as_user(user_request.username, user_request.password),
             Endpoint.ACCOUNTS_TRANSFER,
             ResponseSpecs.request_returns_bad_request_with_text(error_message)
+        ).post(transfer_request)
+
+
+    def transfer_money_to_account_forbidden_action(self, user_request: CreateUserRequest, transfer_request: AccountTransferRequest):
+        CrudRequester(
+            RequestSpecs.auth_as_user(user_request.username, user_request.password),
+            Endpoint.ACCOUNTS_TRANSFER,
+            ResponseSpecs.action_forbidden()
         ).post(transfer_request)
 
     def get_profile(self, user_request: CreateUserRequest) -> GetCustomerProfileResponse:
@@ -174,3 +199,6 @@ class UserSteps(BaseSteps):
         ).get()
 
         return profile_response
+
+    def _get_account_data_from_profile(self, profile: GetCustomerProfileResponse, account_id: int) -> Optional[GetCustomerAccount]:
+        return next((acc for acc in profile.accounts if acc.id == account_id), None)

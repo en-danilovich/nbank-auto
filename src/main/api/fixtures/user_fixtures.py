@@ -56,8 +56,8 @@ def accounts_with_balance(request, users, api_manager) -> List[UserAccountContex
             account_data: CreateAccountResponse = api_manager.user_steps.create_account(user_data)
             if balance is not None:
                 deposit_balance(api_manager, user_data, account_data.id, balance)
-                user_accounts.append(account_data)
                 account_data.balance = balance
+            user_accounts.append(account_data)
         context_list.append(UserAccountContext(user=user_data, accounts=user_accounts))
 
     return context_list
