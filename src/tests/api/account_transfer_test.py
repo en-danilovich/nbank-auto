@@ -3,6 +3,7 @@ from typing import List
 import pytest
 
 from src.main.api.classes.api_manager import ApiManager
+from src.main.api.constants.error_messages import ErrorMessages
 from src.main.api.generators.random_data import RandomData
 from src.main.api.models.accounts.account_transfer_request import AccountTransferRequest
 from src.main.api.models.create_account_response import CreateAccountResponse
@@ -56,9 +57,9 @@ class TestAccountTransfer(BaseTest):
     @pytest.mark.with_users(accounts_count=2, balance=10000)
     @pytest.mark.usefixtures('api_manager')
     @pytest.mark.parametrize('transfer_amount, error_message', [
-        (-0.01, 'Transfer amount must be at least 0.01'),
-        (0, 'Transfer amount must be at least 0.01'),
-        (10000.1, 'Transfer amount cannot exceed 10000'),
+        (-0.01, ErrorMessages.MIN_TRANSFER_AMOUNT_MSG),
+        (0, ErrorMessages.MIN_TRANSFER_AMOUNT_MSG),
+        (10000.1, ErrorMessages.MAX_TRANSFER_AMOUNT_MSG),
     ])
     def test_account_transfer_invalid_transfer_amount(self, accounts_with_balance: List[UserAccountContext],
                                                       api_manager: ApiManager,
@@ -77,8 +78,8 @@ class TestAccountTransfer(BaseTest):
         transfer_request = AccountTransferRequest(senderAccountId=user_context.accounts[0].id,
                                                   receiverAccountId=user_context.accounts[1].id,
                                                   amount=RandomData.get_deposit_balance())
-        error_message = "Invalid transfer: insufficient funds or invalid accounts"
-        api_manager.user_steps.transfer_money_to_account_invalid_data(user_context.user, transfer_request, error_message)
+        api_manager.user_steps.transfer_money_to_account_invalid_data(user_context.user, transfer_request,
+                                                                      ErrorMessages.INVALID_TRANSFER_INSUFFICIENT_FUNDS_MSG)
 
     @pytest.mark.usefixtures('api_manager', 'user_request', 'account_data')
     @pytest.mark.parametrize('random_receiver_account', [
@@ -98,8 +99,8 @@ class TestAccountTransfer(BaseTest):
             senderAccountId=account_data.id,
             receiverAccountId=RandomData.get_invalid_account_id() if random_receiver_account else account_data.id,
             amount=RandomData.get_deposit_balance())
-        error_message = "Invalid transfer: insufficient funds or invalid accounts"
-        api_manager.user_steps.transfer_money_to_account_invalid_data(user_request, transfer_request, error_message)
+        api_manager.user_steps.transfer_money_to_account_invalid_data(user_request, transfer_request,
+                                                                      ErrorMessages.INVALID_TRANSFER_INSUFFICIENT_FUNDS_MSG)
 
     @pytest.mark.usefixtures('api_manager', 'user_request', 'account_data')
     def test_account_transfer_non_existing_receiver_account_id(self, api_manager: ApiManager,
