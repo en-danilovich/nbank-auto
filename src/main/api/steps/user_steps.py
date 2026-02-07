@@ -200,5 +200,14 @@ class UserSteps(BaseSteps):
 
         return profile_response
 
+    def verify_account_balance(self, user_request: CreateUserRequest, account_id: int, expected_balance: float):
+        profile = self.get_profile(user_request)
+        account = self._get_account_data_from_profile(profile, account_id)
+
+        assert expected_balance == account.balance, (
+            f"Verify account balance is '{expected_balance}', but got {account.balance}."
+            f"\nUsername: '{user_request.username}'\nAccount ID: '{account_id}'"
+        )
+
     def _get_account_data_from_profile(self, profile: GetCustomerProfileResponse, account_id: int) -> Optional[GetCustomerAccount]:
         return next((acc for acc in profile.accounts if acc.id == account_id), None)

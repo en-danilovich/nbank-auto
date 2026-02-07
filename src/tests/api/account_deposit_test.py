@@ -30,6 +30,7 @@ class TestAccountDeposit(BaseTest):
     def test_account_deposit_empty_balance(self, api_manager: ApiManager, user_request: CreateUserRequest,
                                            account_data: CreateAccountResponse, balance: str | None):
         api_manager.user_steps.deposit_money_with_empty_balance(user_request, account_data.id, balance)
+        api_manager.user_steps.verify_account_balance(user_request, account_data.id, account_data.balance)
 
     @pytest.mark.usefixtures('api_manager', 'user_request', 'account_data')
     @pytest.mark.parametrize('balance', [
@@ -40,6 +41,7 @@ class TestAccountDeposit(BaseTest):
     def test_account_deposit(self, api_manager: ApiManager, user_request: CreateUserRequest,
                              account_data: CreateAccountResponse, balance: float):
         api_manager.user_steps.deposit_money_to_account(user_request, account_data.id, balance, 0.00)
+        api_manager.user_steps.verify_account_balance(user_request, account_data.id, balance)
 
     @pytest.mark.usefixtures('api_manager', 'user_request', 'account_data')
     def test_account_deposit_multiple_deposits(self, api_manager: ApiManager, user_request: CreateUserRequest,
@@ -48,7 +50,9 @@ class TestAccountDeposit(BaseTest):
         api_manager.user_steps.deposit_money_to_account(user_request, account_data.id, deposit_balance, 0.00)
         current_balance = deposit_balance
 
-        api_manager.user_steps.deposit_money_to_account(user_request, account_data.id, RandomData.get_deposit_balance(), current_balance)
+        next_deposit = RandomData.get_deposit_balance()
+        api_manager.user_steps.deposit_money_to_account(user_request, account_data.id, next_deposit, current_balance)
+        api_manager.user_steps.verify_account_balance(user_request, account_data.id, deposit_balance + next_deposit)
 
     @pytest.mark.usefixtures('api_manager', 'user_request', 'account_data')
     def test_account_deposit_two_same_deposits_in_a_row(self, api_manager: ApiManager, user_request: CreateUserRequest,
@@ -56,6 +60,7 @@ class TestAccountDeposit(BaseTest):
         deposit_balance = RandomData.get_deposit_balance()
         api_manager.user_steps.deposit_money_to_account(user_request, account_data.id, deposit_balance, 0.00)
         api_manager.user_steps.deposit_money_to_account(user_request, account_data.id, deposit_balance, deposit_balance)
+        api_manager.user_steps.verify_account_balance(user_request, account_data.id, deposit_balance * 2)
 
     @pytest.mark.usefixtures('user_request', 'api_manager')
     def test_account_deposit_account_belonging_to_another_user(self, api_manager: ApiManager, user_request: CreateUserRequest):
@@ -64,6 +69,7 @@ class TestAccountDeposit(BaseTest):
         second_user_account_response: CreateAccountResponse = api_manager.user_steps.create_account(second_user_request)
 
         api_manager.user_steps.deposit_money_to_invalid_account(user_request, second_user_account_response.id)
+        api_manager.user_steps.verify_account_balance(second_user_request, second_user_account_response.id, second_user_account_response.balance)
 
     @pytest.mark.usefixtures('api_manager', 'user_request')
     def test_account_deposit_nonexisting_account(self, api_manager: ApiManager, user_request: CreateUserRequest):
@@ -79,5 +85,6 @@ class TestAccountDeposit(BaseTest):
     def test_account_deposit_invalid_deposit_balance(self, api_manager: ApiManager, user_request: CreateUserRequest,
                                              account_data: CreateAccountResponse, balance: float | None, error_message: str):
         api_manager.user_steps.deposit_money_with_invalid_balance(user_request, account_data.id, balance, error_message)
+        api_manager.user_steps.verify_account_balance(user_request, account_data.id, account_data.balance)
 
 

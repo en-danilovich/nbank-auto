@@ -66,32 +66,38 @@ class TestAccountTransfer(BaseTest):
                                                       transfer_amount: float,
                                                       error_message: str):
         user_context = accounts_with_balance[0]
-        transfer_request = AccountTransferRequest(senderAccountId=user_context.accounts[0].id,
-                                                  receiverAccountId=user_context.accounts[1].id,
+        first_account, second_account = user_context.accounts[0], user_context.accounts[1]
+        transfer_request = AccountTransferRequest(senderAccountId=first_account.id,
+                                                  receiverAccountId=second_account.id,
                                                   amount=transfer_amount)
         api_manager.user_steps.transfer_money_to_account_invalid_data(user_context.user, transfer_request, error_message)
+        api_manager.user_steps.verify_account_balance(user_context.user, first_account.id, first_account.balance)
+        api_manager.user_steps.verify_account_balance(user_context.user, second_account.id, second_account.balance)
 
     @pytest.mark.with_users(accounts_count=2)
     @pytest.mark.usefixtures('api_manager')
     def test_account_transfer_insufficent_funds(self, accounts_with_balance: List[UserAccountContext], api_manager: ApiManager):
         user_context = accounts_with_balance[0]
+        first_account, second_account = user_context.accounts[0], user_context.accounts[1]
         transfer_request = AccountTransferRequest(senderAccountId=user_context.accounts[0].id,
                                                   receiverAccountId=user_context.accounts[1].id,
                                                   amount=RandomData.get_deposit_balance())
         api_manager.user_steps.transfer_money_to_account_invalid_data(user_context.user, transfer_request,
                                                                       ErrorMessages.INVALID_TRANSFER_INSUFFICIENT_FUNDS_MSG)
+        api_manager.user_steps.verify_account_balance(user_context.user, first_account.id, first_account.balance)
+        api_manager.user_steps.verify_account_balance(user_context.user, second_account.id, second_account.balance)
 
     @pytest.mark.usefixtures('api_manager', 'user_request', 'account_data')
     @pytest.mark.parametrize('random_receiver_account', [
         True,
         False,
     ])
-    def test_account_transfer_invalid_sender_account_id(self, api_manager: ApiManager, user_request: CreateUserRequest,
+    def test_account_transfer_invalid_receiver_account_id(self, api_manager: ApiManager, user_request: CreateUserRequest,
                                                         account_data: CreateAccountResponse,
                                                         random_receiver_account: bool):
         """
         covered 2 cases
-            1. transfer non existing sender account_id
+            1. transfer non existing receiver account_id
             2. receiver and sender account ids are the same
         """
 
@@ -101,17 +107,20 @@ class TestAccountTransfer(BaseTest):
             amount=RandomData.get_deposit_balance())
         api_manager.user_steps.transfer_money_to_account_invalid_data(user_request, transfer_request,
                                                                       ErrorMessages.INVALID_TRANSFER_INSUFFICIENT_FUNDS_MSG)
+        if not random_receiver_account:
+            api_manager.user_steps.verify_account_balance(user_request, account_data.id, account_data.balance)
 
     @pytest.mark.usefixtures('api_manager', 'user_request', 'account_data')
-    def test_account_transfer_non_existing_receiver_account_id(self, api_manager: ApiManager,
-                                                               user_request: CreateUserRequest,
-                                                               account_data: CreateAccountResponse):
+    def test_account_transfer_non_existing_sender_account_id(self, api_manager: ApiManager,
+                                                             user_request: CreateUserRequest,
+                                                             account_data: CreateAccountResponse):
         transfer_request = AccountTransferRequest(
             senderAccountId=RandomData.get_invalid_account_id(),
             receiverAccountId=account_data.id,
             amount=RandomData.get_deposit_balance())
 
         api_manager.user_steps.transfer_money_to_account_forbidden_action(user_request, transfer_request)
+        api_manager.user_steps.verify_account_balance(user_request, account_data.id, account_data.balance)
 
     @pytest.mark.with_users(count=2)
     @pytest.mark.usefixtures('api_manager')
@@ -122,3 +131,9 @@ class TestAccountTransfer(BaseTest):
                                                   receiverAccountId=second_user_context.accounts[0].id,
                                                   amount=RandomData.get_deposit_balance())
         api_manager.user_steps.transfer_money_to_account_forbidden_action(second_user_context.user, transfer_request)
+        api_manager.user_steps.verify_account_balance(first_user_context.user,
+                                                      first_user_context.accounts[0].id,
+                                                      first_user_context.accounts[0].balance)
+        api_manager.user_steps.verify_account_balance(second_user_context.user,
+                                                      second_user_context.accounts[0].id,
+                                                      second_user_context.accounts[0].balance)

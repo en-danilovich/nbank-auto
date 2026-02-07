@@ -46,6 +46,10 @@ class TestUpdateCustomerProfile(BaseTest):
                              ])
     def test_update_customer_profile_incorrect_name(self, api_manager: ApiManager, user_request: CreateUserRequest,
                                                     name: str):
+        profile_name = api_manager.user_steps.get_profile(user_request).name
         api_manager.user_steps.update_profile_using_invalid_data(user_request,
                                                                  UpdateCustomerProfileRequest(name=name),
                                                                  'Name must contain two words with letters only')
+        assert api_manager.user_steps.get_profile(user_request).name == profile_name, (
+            "Verify user.name was not changed"
+        )
