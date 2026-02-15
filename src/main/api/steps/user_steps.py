@@ -126,11 +126,6 @@ class UserSteps(BaseSteps):
             f"Incorrect '{update_customer_profile_response.customer.username}' customer.name, expected '{update_customer_profile_request.name}'"
         )
 
-        profile: GetCustomerProfileResponse = self.get_profile(user_request)
-        assert profile.name == update_customer_profile_request.name, (
-            f"Customer profile name '{profile.name} is not equal to updated '{update_customer_profile_request.name}'"
-        )
-
         return update_customer_profile_response
 
     def update_profile_using_invalid_data(self, user_request: CreateUserRequest,
@@ -142,15 +137,7 @@ class UserSteps(BaseSteps):
             ResponseSpecs.request_returns_bad_request_with_text(error_message)
         ).update(update_customer_profile_request)
 
-    def transfer_money_to_account(self, sender_user_request: CreateUserRequest, transfer_request: AccountTransferRequest,
-                                  receiver_user_request: Optional[CreateUserRequest] = None) -> AccountTransferResponse:
-        if receiver_user_request is None:
-            receiver_user_request = sender_user_request
-        sender_balance_before_transfer = self._get_account_data_from_profile(self.get_profile(sender_user_request),
-                                                                             transfer_request.senderAccountId).balance
-        receiver_balance_before_transfer = self._get_account_data_from_profile(self.get_profile(receiver_user_request),
-                                                                               transfer_request.receiverAccountId).balance
-
+    def transfer_money_to_account(self, sender_user_request: CreateUserRequest, transfer_request: AccountTransferRequest) -> AccountTransferResponse:
         transfer_response: AccountTransferResponse = ValidatedCrudRequester(
             RequestSpecs.auth_as_user(sender_user_request.username, sender_user_request.password),
             Endpoint.ACCOUNTS_TRANSFER,
@@ -159,18 +146,6 @@ class UserSteps(BaseSteps):
 
         ModelAssertions(transfer_request, transfer_response).match()
         assert transfer_response.message == "Transfer successful"
-
-        sender_balance_after_transfer = self._get_account_data_from_profile(self.get_profile(sender_user_request),
-                                                                            transfer_request.senderAccountId).balance
-        assert sender_balance_before_transfer - transfer_request.amount == sender_balance_after_transfer, (
-            f"Verify correct balance was withdrawn from account '{transfer_request.senderAccountId}' for user '{sender_user_request.username}'"
-        )
-
-        receiver_balance_after_transfer = self._get_account_data_from_profile(self.get_profile(receiver_user_request),
-                                                                              transfer_request.receiverAccountId).balance
-        assert receiver_balance_before_transfer + transfer_request.amount == receiver_balance_after_transfer, (
-            f"Verify correct balance was added to account '{transfer_request.receiverAccountId}' for user '{receiver_user_request.username}'"
-        )
 
         return transfer_response
 

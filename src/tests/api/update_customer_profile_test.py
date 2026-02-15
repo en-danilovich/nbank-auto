@@ -27,6 +27,9 @@ class TestUpdateCustomerProfile(BaseTest):
     def test_update_customer_profile(self, api_manager: ApiManager, user_request: CreateUserRequest,
                                      update_customer_profile_request: UpdateCustomerProfileRequest):
         api_manager.user_steps.update_profile(user_request, update_customer_profile_request)
+        assert api_manager.user_steps.get_profile(user_request).name == update_customer_profile_request.name, (
+            "Verify user.name was not changed"
+        )
 
     @pytest.mark.usefixtures('api_manager')
     @pytest.mark.usefixtures('api_manager', 'user_request')

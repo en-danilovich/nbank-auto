@@ -35,10 +35,17 @@ class TestAccountTransfer(BaseTest):
                                                api_manager: ApiManager,
                                                transfer_amount: float):
         user_context = accounts_with_balance[0]
-        transfer_request = AccountTransferRequest(senderAccountId=user_context.accounts[0].id,
-                                                  receiverAccountId=user_context.accounts[1].id,
+        sender_account, receiver_account = user_context.accounts[0], user_context.accounts[1]
+        transfer_request = AccountTransferRequest(senderAccountId=sender_account.id,
+                                                  receiverAccountId=receiver_account.id,
                                                   amount=transfer_amount)
         api_manager.user_steps.transfer_money_to_account(user_context.user, transfer_request)
+
+        api_manager.user_steps.verify_account_balance(user_context.user, sender_account.id,
+                                                      sender_account.balance - transfer_amount)
+        api_manager.user_steps.verify_account_balance(user_context.user, receiver_account.id,
+                                                      receiver_account.balance + transfer_amount)
+
 
     @pytest.mark.with_users(count=2, accounts_count=1, balance=5000)
     @pytest.mark.usefixtures('api_manager')
@@ -51,8 +58,12 @@ class TestAccountTransfer(BaseTest):
                                                   receiverAccountId=receiver_user_context.accounts[0].id,
                                                   amount=RandomData.get_deposit_balance())
         api_manager.user_steps.transfer_money_to_account(sender_user_request=sender_user_context.user,
-                                                         transfer_request=transfer_request,
-                                                         receiver_user_request=receiver_user_context.user)
+                                                         transfer_request=transfer_request)
+
+        api_manager.user_steps.verify_account_balance(sender_user_context.user, sender_user_context.accounts[0].id,
+                                                      sender_user_context.accounts[0].balance - transfer_request.amount)
+        api_manager.user_steps.verify_account_balance(receiver_user_context.user, receiver_user_context.accounts[0].id,
+                                                      receiver_user_context.accounts[0].balance + transfer_request.amount)
 
     @pytest.mark.with_users(accounts_count=2, balance=10000)
     @pytest.mark.usefixtures('api_manager')
