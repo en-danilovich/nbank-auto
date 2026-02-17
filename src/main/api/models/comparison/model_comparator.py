@@ -35,6 +35,7 @@ class ModelComparator:
         
         return ComparisonResult(mismatches)
 
+    @staticmethod
     def _get_field_value(obj: Any, field_name: str):
         current_class = obj.__class__
 

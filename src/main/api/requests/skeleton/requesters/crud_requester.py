@@ -1,5 +1,4 @@
-from http import HTTPStatus
-from typing import Optional, TypeVar, Union
+from typing import Optional, TypeVar
 import requests
 
 
@@ -36,7 +35,17 @@ class CrudRequester(HttpRequest, CrudEndpointInterface):
         self.response_spec(response)
         return response
 
-    def update(self, model: BaseModel, id: int): ...
+    def update(self, model: Optional[BaseModel] = None, id: Optional[int] = None) -> requests.Response:
+        body = model.model_dump() if model is not None else ''
+
+        url = f'{self.base_url}{self.endpoint.value.url}{("/" + str(id)) if id is not None else ""}'
+        response = requests.put(
+            url=url,
+            headers=self.request_spec,
+            json=body
+        )
+        self.response_spec(response)
+        return response
 
     def delete(self, id: int) -> requests.Response:
         response = requests.delete(

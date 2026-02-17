@@ -1,5 +1,4 @@
 from typing import List
-from src.main.api.generators.random_model_generator import RandomModelGenerator
 from src.main.api.models.comparison.model_assertions import ModelAssertions
 from src.main.api.requests.skeleton.requesters.validated_crud_requester import ValidatedCrudRequester
 from src.main.api.models.create_user_response import CreateUserResponse
@@ -28,7 +27,7 @@ class AdminSteps(BaseSteps):
         CrudRequester(
             RequestSpecs.admin_auth_spec(),
             Endpoint.ADMIN_CREATE_USER,
-            ResponseSpecs.request_returns_bad_request(error_key, error_value)
+            ResponseSpecs.request_returns_bad_request_multiple_errors(error_key, error_value)
         ).post(user_request)
 
     def delete_user(self, user_id: int):
