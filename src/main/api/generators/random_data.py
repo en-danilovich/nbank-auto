@@ -8,8 +8,8 @@ faker = Faker()
 
 class RandomData:
     @staticmethod
-    def get_username() -> str:
-        return ''.join(faker.random_letters(length=random.randint(3, 15)))
+    def get_username(length=random.randint(3, 15)) -> str:
+        return ''.join(faker.random_letters(length))
     
     @staticmethod
     def get_password() -> str:

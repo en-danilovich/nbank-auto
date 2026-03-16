@@ -5,12 +5,15 @@ from src.main.api.models.accounts.account_deposit_request import AccountDepositR
 from src.main.api.models.accounts.account_deposit_response import AccountDepositResponse
 from src.main.api.models.accounts.account_transfer_request import AccountTransferRequest
 from src.main.api.models.accounts.account_transfer_response import AccountTransferResponse
+from typing import List
+
 from src.main.api.models.create_user_request import CreateUserRequest
 from src.main.api.models.comparison.model_assertions import ModelAssertions
 from src.main.api.models.customer.get_customer_profile_response import GetCustomerProfileResponse, GetCustomerAccount
 from src.main.api.models.customer.update_customer_profile_request import UpdateCustomerProfileRequest
 from src.main.api.models.customer.update_customer_profile_response import UpdateCustomerProfileResponse
 from src.main.api.requests.skeleton.requesters.crud_requester import CrudRequester
+from src.main.api.models.create_user_response import CreateUserResponse
 from src.main.api.requests.skeleton.requesters.validated_crud_requester import ValidatedCrudRequester
 from src.main.api.requests.skeleton.endpoint import Endpoint
 from src.main.api.steps.base_steps import BaseSteps
@@ -186,3 +189,21 @@ class UserSteps(BaseSteps):
 
     def _get_account_data_from_profile(self, profile: GetCustomerProfileResponse, account_id: int) -> Optional[GetCustomerAccount]:
         return next((acc for acc in profile.accounts if acc.id == account_id), None)
+
+    def get_all_accounts(self, user_request: CreateUserRequest) -> List[CreateAccountResponse]:
+        user_accounts: List[CreateAccountResponse] = ValidatedCrudRequester(
+            RequestSpecs.auth_as_user(user_request.username, user_request.password),
+            Endpoint.GET_CUSTOMER_ACCOUNTS,
+            ResponseSpecs.request_returns_ok()
+        ).get()
+
+        return user_accounts
+
+    def get_profile(self, user_request: CreateUserRequest) -> CreateUserResponse:
+        user_profile: CreateUserResponse = ValidatedCrudRequester(
+            RequestSpecs.auth_as_user(user_request.username, user_request.password),
+            Endpoint.GET_USER_PROFILE,
+            ResponseSpecs.request_returns_ok()
+        ).get()
+
+        return user_profile
