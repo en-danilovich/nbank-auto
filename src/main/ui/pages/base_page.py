@@ -48,10 +48,9 @@ class BasePage(ABC):
     def get_page(self, page_cls: Type[T]) -> T:
         return page_cls(self.page)
 
-    def check_alert_message_and_accept(self: T, expected_text: str):
-        def _handler(d: Dialog):
-            assert expected_text in d.message, f"Alert text mismatch: {expected_text}"
+    def check_alert_message_and_accept(self: T, expected_text: str) -> T:
+        def _handler(d: Dialog) -> None:
+            assert expected_text in d.message, f"Alert text mismatch: {d.message}"
             d.accept()
-
         self.page.once("dialog", _handler)
         return self

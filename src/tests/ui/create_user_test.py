@@ -21,7 +21,9 @@ class TestCreateUser:
 
         admin_page = AdminPanel(page).open()\
             .create_user(new_user_request.username, new_user_request.password)\
-            .check_alert_message_and_accept(BankAlert.USER_CREATED_SUCCESSFULLY)
+            .check_alert_message_and_accept(BankAlert.USER_CREATED_SUCCESSFULLY)\
+            .wait_for_username(new_user_request.username)
+
         assert any(u.username == new_user_request.username for u in admin_page.get_all_users())
 
         created_user = next(

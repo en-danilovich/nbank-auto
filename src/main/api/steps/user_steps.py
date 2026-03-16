@@ -13,7 +13,6 @@ from src.main.api.models.customer.get_customer_profile_response import GetCustom
 from src.main.api.models.customer.update_customer_profile_request import UpdateCustomerProfileRequest
 from src.main.api.models.customer.update_customer_profile_response import UpdateCustomerProfileResponse
 from src.main.api.requests.skeleton.requesters.crud_requester import CrudRequester
-from src.main.api.models.create_user_response import CreateUserResponse
 from src.main.api.requests.skeleton.requesters.validated_crud_requester import ValidatedCrudRequester
 from src.main.api.requests.skeleton.endpoint import Endpoint
 from src.main.api.steps.base_steps import BaseSteps
@@ -198,12 +197,3 @@ class UserSteps(BaseSteps):
         ).get()
 
         return user_accounts
-
-    def get_profile(self, user_request: CreateUserRequest) -> CreateUserResponse:
-        user_profile: CreateUserResponse = ValidatedCrudRequester(
-            RequestSpecs.auth_as_user(user_request.username, user_request.password),
-            Endpoint.GET_USER_PROFILE,
-            ResponseSpecs.request_returns_ok()
-        ).get()
-
-        return user_profile
