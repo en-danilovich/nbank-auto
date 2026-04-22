@@ -33,6 +33,5 @@ class DepositPage(BasePage):
         return self
 
     def verify_account_balance_option(self, account_number: str, balance: float):
-        option_locator = self.account_select.element.locator("option", has_text=account_number).first
-        expect(option_locator).to_contain_text(f'${balance}')
+        expect(self.account_select.get_option_by_account_number(account_number)).to_contain_text(f'${balance}')
         return self

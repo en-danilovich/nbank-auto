@@ -2,6 +2,7 @@ import re
 
 from playwright.sync_api import Dialog, expect
 
+from src.main.api.requests.skeleton.endpoint import Endpoint
 from src.main.ui.pages.base_page import BasePage
 from src.main.ui.pages.deposit_page import DepositPage
 from src.main.ui.pages.edit_profile_page import EditProfilePage
@@ -54,18 +55,12 @@ class UserDashboard(BasePage):
         return self.get_page(EditProfilePage)
 
     def click_make_transfer(self) -> TransferPage:
-        with self.page.expect_response(
-                lambda res: res.url == "http://localhost:3000/api/v1/customer/accounts"
-                            and res.status == 200
-        ):
+        with self.expect_api_response(Endpoint.GET_CUSTOMER_ACCOUNTS):
             self.transfer_button.click()
         return self.get_page(TransferPage)
 
     def click_deposit_money(self) -> DepositPage:
-        with self.page.expect_response(
-                lambda res: res.url == "http://localhost:3000/api/v1/customer/accounts"
-                            and res.status == 200
-        ) as response_info:
+        with self.expect_api_response(Endpoint.GET_CUSTOMER_ACCOUNTS):
             self.deposit_money_button.click()
         return self.get_page(DepositPage)
 

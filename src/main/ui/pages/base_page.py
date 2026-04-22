@@ -7,6 +7,7 @@ from playwright.sync_api import Page, Dialog, Locator, expect
 
 from src.main.api.configs.config import Config
 from src.main.api.models.create_user_request import CreateUserRequest
+from src.main.api.requests.skeleton.endpoint import Endpoint
 from src.main.api.specs.request_specs import RequestSpecs
 
 T = TypeVar("T", bound="BasePage")
@@ -56,6 +57,10 @@ class BasePage(ABC):
         expect(self.header_user_name,
                f"Header name should be '{expected_name}'").to_have_text(expected_name)
         return self
+
+    def expect_api_response(self, endpoint: Endpoint, status: int = 200):
+        api_url = f"{self.base_url}{Config.get('api_version')}{endpoint.value.url}"
+        return self.page.expect_response(lambda res: res.url == api_url and res.status == status)
 
     def check_alert_message_and_accept(self: T, expected_text: str) -> T:
         def _handler(d: Dialog) -> None:
