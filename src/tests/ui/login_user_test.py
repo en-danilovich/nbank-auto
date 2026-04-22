@@ -24,4 +24,4 @@ class TestLoginUser:
             .login(user_request.username, user_request.password) \
             .get_page(UserDashboard)
 
-        expect(user_dashboard.welcome_text).to_be_visible()
+        expect(user_dashboard.dashboard_text).to_be_visible()

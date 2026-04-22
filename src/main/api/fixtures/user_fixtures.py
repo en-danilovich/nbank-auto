@@ -23,7 +23,7 @@ def user_factory(api_manager: ApiManager):
 @pytest.fixture(scope='function')
 def user_request(user_factory):
     try:
-        return SessionStorage.get_user(-1)
+        return SessionStorage.get_user(0)
     except:
         user = user_factory()
         return user
