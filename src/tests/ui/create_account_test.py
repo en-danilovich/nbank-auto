@@ -13,9 +13,9 @@ class TestCreateAccount:
     @pytest.mark.user_session(10)
     def test_user_can_create_account(self, page: Page, api_manager:ApiManager, user_request: CreateUserRequest):
         user_dashboard = UserDashboard(page).open()\
-            .create_new_account()\
+            .click_create_new_account()\
             .check_alert_message_and_accept(BankAlert.NEW_ACCOUNT_CREATED)
-        expect(user_dashboard.welcome_text).to_be_visible()
+        expect(user_dashboard.dashboard_text).to_be_visible()
 
         user_accounts: List[CreateAccountResponse] = api_manager.user_steps.get_all_accounts(user_request)
         assert len(user_accounts) == 1
