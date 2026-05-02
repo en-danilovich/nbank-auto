@@ -1,0 +1,20 @@
+services:
+  backend:
+    image: nobugsme/nbank:with_username_error_fix
+    ports:
+      - "4111:4111"
+    networks:
+      - nbank-network
+
+  frontend:
+    image: nobugsme/nbank-ui:with_nginx
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - nbank-network
+
+networks:
+  nbank-network:
+    name: nbank-network

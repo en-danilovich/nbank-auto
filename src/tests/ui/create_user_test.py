@@ -37,8 +37,6 @@ class TestCreateUser:
     @pytest.mark.parametrize('new_user_request',
                              [CreateUserRequest(username=RandomData.get_username(1), password=RandomData.get_password(), role=Role.USER)])
     def test_admin_cannot_create_user_with_invalid_data(self, page: Page, api_manager: ApiManager, new_user_request: CreateUserRequest):
-        api_manager.admin_steps.created_objects.append(new_user_request)
-
         admin_page = AdminPanel(page).open() \
             .create_user(new_user_request.username, new_user_request.password) \
             .check_alert_message_and_accept(BankAlert.USERNAME_MUST_BE_BETWEEN_3_AND_15_CHARACTERS)

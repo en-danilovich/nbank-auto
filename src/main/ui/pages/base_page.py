@@ -18,6 +18,9 @@ class BasePage(ABC):
         self.base_url = str(Config.get('UI_BASE_URL', "http://localhost:3000")).strip('/')
 
     def _generate_page_elements(self, element: Locator, constructor: Callable) -> list:
+        count = element.count()
+        if count == 0:
+            return []
         element.first.wait_for(state="attached", timeout=10_000)
         return [constructor(element.nth(index)) for index in range(element.count())]
 
