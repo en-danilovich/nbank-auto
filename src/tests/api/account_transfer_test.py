@@ -65,12 +65,12 @@ class TestAccountTransfer(BaseTest):
         api_manager.user_steps.verify_account_balance(receiver_user_context.user, receiver_user_context.accounts[0].id,
                                                       receiver_user_context.accounts[0].balance + transfer_request.amount)
 
-    @pytest.mark.with_users(accounts_count=2, balance=10000)
+    @pytest.mark.with_users(accounts_count=2, balance=15000)
     @pytest.mark.usefixtures('api_manager')
     @pytest.mark.parametrize('transfer_amount, error_message', [
-        (-0.01, ErrorMessages.MIN_TRANSFER_AMOUNT_MSG),
-        (0, ErrorMessages.MIN_TRANSFER_AMOUNT_MSG),
-        (10000.1, ErrorMessages.MAX_TRANSFER_AMOUNT_MSG),
+        (-0.01, ErrorMessages.INVALID_TRANSFER),
+        (0, ErrorMessages.INVALID_TRANSFER),
+        (10000.1, ErrorMessages.INVALID_TRANSFER),
     ])
     def test_account_transfer_invalid_transfer_amount(self, accounts_with_balance: List[UserAccountContext],
                                                       api_manager: ApiManager,

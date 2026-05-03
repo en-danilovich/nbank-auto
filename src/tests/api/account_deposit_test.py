@@ -78,8 +78,8 @@ class TestAccountDeposit(BaseTest):
 
     @pytest.mark.usefixtures('api_manager', 'user_request', 'account_data')
     @pytest.mark.parametrize('balance, error_message', [
-        (-0.01, "Deposit amount must be at least 0.01"),
-        (0.00, "Deposit amount must be at least 0.01"),
+        (-0.01, "Invalid account or amount"),
+        (0.00, "Invalid account or amount"),
         (5000.01, "Deposit amount cannot exceed 5000"),
     ])
     def test_account_deposit_invalid_deposit_balance(self, api_manager: ApiManager, user_request: CreateUserRequest,

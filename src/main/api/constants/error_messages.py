@@ -3,3 +3,4 @@ class ErrorMessages:
     INVALID_TRANSFER_INSUFFICIENT_FUNDS_MSG = "Invalid transfer: insufficient funds or invalid accounts"
     MIN_TRANSFER_AMOUNT_MSG = 'Transfer amount must be at least 0.01'
     MAX_TRANSFER_AMOUNT_MSG = 'Transfer amount cannot exceed 10000'
+    INVALID_TRANSFER = 'Invalid transfer: insufficient funds or invalid accounts'
