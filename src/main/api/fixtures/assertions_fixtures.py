@@ -150,3 +150,41 @@ def check_accounts_change(request: pytest.FixtureRequest):
         f"Expected accounts delta={delta} (after-before), but got {len(after) - len(before)}. "
         f"before={len(before)}, after={len(after)}"
     )
+
+
+@pytest.fixture(autouse=True, scope="function")
+def check_profile_name(request: pytest.FixtureRequest):
+    """
+    Marker-driven post-action verification for customer profile name.
+
+    Without expected_source, asserts the name is unchanged after the test.
+    With expected_source, asserts the name equals the resolved value.
+
+    Usage:
+      @pytest.mark.check_profile_name(expected_source="update_customer_profile_request.name")
+      @pytest.mark.check_profile_name()
+    """
+    mark = request.node.get_closest_marker("check_profile_name")
+    if not mark:
+        yield
+        return
+
+    expected_source: Optional[str] = mark.kwargs.get("expected_source")
+
+    api_manager: ApiManager = request.getfixturevalue("api_manager")
+    user_request: CreateUserRequest = request.getfixturevalue("user_request")
+
+    before_name = api_manager.user_steps.get_profile(user_request).name
+
+    resolved_expected: Optional[str] = None
+    if expected_source:
+        resolved_expected = str(_resolve_source(request, expected_source))
+
+    yield
+
+    after_name = api_manager.user_steps.get_profile(user_request).name
+    expected = resolved_expected if resolved_expected is not None else before_name
+
+    assert after_name == expected, (
+        f"Expected profile name='{expected}', but got '{after_name}'"
+    )

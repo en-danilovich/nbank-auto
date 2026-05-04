@@ -10,27 +10,27 @@ from src.main.api.models.customer.update_customer_profile_request import UpdateC
 
 @pytest.mark.ui
 class TestUpdateCustomerProfile:
-    @pytest.mark.user_session(10)
-    def test_update_customer_profile(self, page: Page, api_manager: ApiManager, user_request: CreateUserRequest):
-        default_name = "Noname"
-        new_name = RandomModelGenerator.generate(UpdateCustomerProfileRequest).name
+    DEFAULT_NAME = "Noname"
 
+    @pytest.mark.user_session(10)
+    @pytest.mark.check_profile_name(expected_source="update_customer_profile_request.name")
+    @pytest.mark.parametrize('update_customer_profile_request', [RandomModelGenerator.generate(UpdateCustomerProfileRequest)])
+    def test_update_customer_profile(self, page: Page, api_manager: ApiManager, user_request: CreateUserRequest,
+                                     update_customer_profile_request: UpdateCustomerProfileRequest):
         UserDashboard(page).open()\
-            .verify_welcome_text(default_name)\
-            .verify_header_username(default_name)\
+            .verify_welcome_text(self.DEFAULT_NAME)\
+            .verify_header_username(self.DEFAULT_NAME)\
             .click_username_in_header()\
             .verify_page_is_visible()\
-            .enter_name(new_name)\
+            .enter_name(update_customer_profile_request.name)\
             .check_alert_message_and_accept(BankAlert.PROFILE_UPDATED_SUCCESSFULLY)\
             .click_save()\
-            .verify_header_username(new_name)\
+            .verify_header_username(update_customer_profile_request.name)\
             .click_home()\
-            .verify_welcome_text(new_name)
-
-        profile = api_manager.user_steps.get_profile(user_request)
-        assert profile.name == new_name
+            .verify_welcome_text(update_customer_profile_request.name)
 
     @pytest.mark.user_session(10)
+    @pytest.mark.check_profile_name()
     @pytest.mark.parametrize('invalid_name, alert_msg', [
         ("", BankAlert.ENTER_VALID_NAME),
         ("John", [BankAlert.ENTER_VALID_NAME, BankAlert.NAME_MUST_CONTAIN_TWO_WORDS]),
@@ -46,7 +46,7 @@ class TestUpdateCustomerProfile:
             .verify_page_is_visible()\
             .enter_name(invalid_name)\
             .check_alert_message_and_accept(alert_msg)\
-            .click_save()
-
-        profile = api_manager.user_steps.get_profile(user_request)
-        assert profile.name is None
+            .click_save()\
+            .verify_header_username(self.DEFAULT_NAME)\
+            .click_home()\
+            .verify_welcome_text(self.DEFAULT_NAME)

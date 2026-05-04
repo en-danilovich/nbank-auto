@@ -21,18 +21,16 @@ class TestUpdateCustomerProfile(BaseTest):
         ).post()
 
     @pytest.mark.usefixtures('api_manager', 'user_request')
+    @pytest.mark.check_profile_name(expected_source="update_customer_profile_request.name")
     @pytest.mark.parametrize('update_customer_profile_request',
                              [RandomModelGenerator.generate(UpdateCustomerProfileRequest),
                               UpdateCustomerProfileRequest(name='A a')])
     def test_update_customer_profile(self, api_manager: ApiManager, user_request: CreateUserRequest,
                                      update_customer_profile_request: UpdateCustomerProfileRequest):
         api_manager.user_steps.update_profile(user_request, update_customer_profile_request)
-        assert api_manager.user_steps.get_profile(user_request).name == update_customer_profile_request.name, (
-            "Verify user.name was not changed"
-        )
 
-    @pytest.mark.usefixtures('api_manager')
     @pytest.mark.usefixtures('api_manager', 'user_request')
+    @pytest.mark.check_profile_name()
     @pytest.mark.parametrize('name',
                              [
                                  RandomData.get_word(),
@@ -49,10 +47,6 @@ class TestUpdateCustomerProfile(BaseTest):
                              ])
     def test_update_customer_profile_incorrect_name(self, api_manager: ApiManager, user_request: CreateUserRequest,
                                                     name: str):
-        profile_name = api_manager.user_steps.get_profile(user_request).name
         api_manager.user_steps.update_profile_using_invalid_data(user_request,
                                                                  UpdateCustomerProfileRequest(name=name),
                                                                  'Name must contain two words with letters only')
-        assert api_manager.user_steps.get_profile(user_request).name == profile_name, (
-            "Verify user.name was not changed"
-        )
