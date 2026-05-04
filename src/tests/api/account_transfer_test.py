@@ -20,7 +20,7 @@ class TestAccountTransfer(BaseTest):
     def test_account_transfer_no_auth(self):
         CrudRequester(
             request_spec=RequestSpecs.unauth_spec(),
-            endpoint=Endpoint.ACCOUNTS_DEPOSIT,
+            endpoint=Endpoint.ACCOUNTS_TRANSFER,
             response_spec=ResponseSpecs.unauthorized_request()
         ).post()
 
@@ -94,7 +94,7 @@ class TestAccountTransfer(BaseTest):
                                                   receiverAccountId=user_context.accounts[1].id,
                                                   amount=RandomData.get_deposit_balance())
         api_manager.user_steps.transfer_money_to_account_invalid_data(user_context.user, transfer_request,
-                                                                      ErrorMessages.INVALID_TRANSFER_INSUFFICIENT_FUNDS_MSG)
+                                                                      ErrorMessages.INVALID_TRANSFER)
         api_manager.user_steps.verify_account_balance(user_context.user, first_account.id, first_account.balance)
         api_manager.user_steps.verify_account_balance(user_context.user, second_account.id, second_account.balance)
 
@@ -117,7 +117,7 @@ class TestAccountTransfer(BaseTest):
             receiverAccountId=RandomData.get_invalid_account_id() if random_receiver_account else account_data.id,
             amount=RandomData.get_deposit_balance())
         api_manager.user_steps.transfer_money_to_account_invalid_data(user_request, transfer_request,
-                                                                      ErrorMessages.INVALID_TRANSFER_INSUFFICIENT_FUNDS_MSG)
+                                                                      ErrorMessages.INVALID_TRANSFER)
         if not random_receiver_account:
             api_manager.user_steps.verify_account_balance(user_request, account_data.id, account_data.balance)
 

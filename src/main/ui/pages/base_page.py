@@ -22,7 +22,7 @@ class BasePage(ABC):
         if count == 0:
             return []
         element.first.wait_for(state="attached", timeout=10_000)
-        return [constructor(element.nth(index)) for index in range(element.count())]
+        return [constructor(element.nth(index)) for index in range(count)]
 
     def auth_as_user(self, user_request: CreateUserRequest) -> None:
         auth_token = RequestSpecs.auth_as_user(user_request.username, user_request.password).get("Authorization")

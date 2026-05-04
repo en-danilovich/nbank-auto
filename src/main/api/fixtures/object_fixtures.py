@@ -28,11 +28,11 @@ def cleanup_objects(objects: List[Any]):
         if isinstance(obj, CreateUserResponse):
             api_manager.admin_steps.delete_user(obj.id)
         elif isinstance(obj, CreateUserRequest):
-                try:
-                    profile = api_manager.user_steps.get_profile(obj)
-                except Exception as e:
-                    logging.warning(f"Skip cleanup for user '{getattr(obj, 'username', obj)}': {e}")
-                    continue
-                api_manager.admin_steps.delete_user(profile.id)
+            try:
+                profile = api_manager.user_steps.get_profile(obj)
+            except Exception as e:
+                logging.warning(f"Skip cleanup for user '{getattr(obj, 'username', obj)}': {e}")
+                continue
+            api_manager.admin_steps.delete_user(profile.id)
         else:
             logging.warning(f'Object type: {type(obj)} is not deleted')
