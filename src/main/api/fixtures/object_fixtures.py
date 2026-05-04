@@ -2,9 +2,16 @@ import logging
 from typing import Any, List
 import pytest
 
+from src.main.api.generators.random_model_generator import RandomModelGenerator
 from src.main.api.models.create_user_request import CreateUserRequest
 from src.main.api.models.create_user_response import CreateUserResponse
+from src.main.api.models.customer.update_customer_profile_request import UpdateCustomerProfileRequest
 from src.main.api.classes.api_manager import ApiManager
+
+
+@pytest.fixture
+def update_customer_profile_request() -> UpdateCustomerProfileRequest:
+    return RandomModelGenerator.generate(UpdateCustomerProfileRequest)
 
 
 @pytest.fixture

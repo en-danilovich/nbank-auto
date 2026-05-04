@@ -2,7 +2,6 @@ import pytest
 from playwright.sync_api import Page
 
 from src.main.api.classes.api_manager import ApiManager
-from src.main.api.generators.random_model_generator import RandomModelGenerator
 from src.main.ui.pages.bank_alert import BankAlert
 from src.main.ui.pages.user_dashboard import UserDashboard
 from src.main.api.models.create_user_request import CreateUserRequest
@@ -14,7 +13,6 @@ class TestUpdateCustomerProfile:
 
     @pytest.mark.user_session(10)
     @pytest.mark.check_profile_name(expected_source="update_customer_profile_request.name")
-    @pytest.mark.parametrize('update_customer_profile_request', [RandomModelGenerator.generate(UpdateCustomerProfileRequest)])
     def test_update_customer_profile(self, page: Page, api_manager: ApiManager, user_request: CreateUserRequest,
                                      update_customer_profile_request: UpdateCustomerProfileRequest):
         UserDashboard(page).open()\
@@ -42,6 +40,8 @@ class TestUpdateCustomerProfile:
                                                   user_request: CreateUserRequest,
                                                   invalid_name: str, alert_msg: str | list[str]):
         UserDashboard(page).open()\
+            .verify_welcome_text(self.DEFAULT_NAME)\
+            .verify_header_username(self.DEFAULT_NAME)\
             .click_username_in_header()\
             .verify_page_is_visible()\
             .enter_name(invalid_name)\
