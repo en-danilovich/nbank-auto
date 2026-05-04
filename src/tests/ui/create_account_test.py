@@ -1,6 +1,6 @@
 from typing import List
 import pytest
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Page
 
 from src.main.api.classes.api_manager import ApiManager
 from src.main.ui.pages.bank_alert import BankAlert
@@ -11,12 +11,14 @@ from src.main.api.models.create_account_response import CreateAccountResponse
 @pytest.mark.ui
 class TestCreateAccount:
     @pytest.mark.user_session(10)
+    @pytest.mark.check_accounts_change(delta=1)
     def test_user_can_create_account(self, page: Page, api_manager:ApiManager, user_request: CreateUserRequest):
-        user_dashboard = UserDashboard(page).open()\
+        UserDashboard(page).open() \
+            .verify_page_is_visible()\
             .click_create_new_account()\
-            .check_alert_message_and_accept(BankAlert.NEW_ACCOUNT_CREATED)
-        expect(user_dashboard.dashboard_text).to_be_visible()
+            .check_alert_message_and_accept(BankAlert.NEW_ACCOUNT_CREATED)\
+            .verify_page_is_visible()
 
-        user_accounts: List[CreateAccountResponse] = api_manager.user_steps.get_all_accounts(user_request)
-        assert len(user_accounts) == 1
-        assert user_accounts[0] and user_accounts[0].balance == 0
+        accounts: List[CreateAccountResponse] = api_manager.user_steps.get_all_accounts(user_request)
+        assert len(accounts) == 1
+        assert accounts[0].balance == 0

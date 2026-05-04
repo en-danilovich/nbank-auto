@@ -2,6 +2,7 @@ from src.main.api.fixtures.user_fixtures import *
 from src.main.api.fixtures.api_fixtures import *
 from src.main.api.fixtures.object_fixtures import *
 from src.main.api.fixtures.setup_hook import *
+from src.main.api.fixtures.assertions_fixtures import *
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
     preferred = "chromium"

@@ -10,6 +10,7 @@ from src.main.api.models.create_user_request import CreateUserRequest
 class TestCreateUser:
     @pytest.mark.usefixtures('api_manager')
     @pytest.mark.parametrize('create_user_request', [RandomModelGenerator.generate(CreateUserRequest)])
+    @pytest.mark.check_all_users_change(delta=1, username_source="create_user_request.username", should_exist=True)
     def test_create_valid_user(self, api_manager: ApiManager, create_user_request: CreateUserRequest):
         api_manager.admin_steps.create_user(create_user_request)
     
@@ -23,6 +24,7 @@ class TestCreateUser:
         ]
     )
     @pytest.mark.usefixtures('api_manager')
+    @pytest.mark.check_all_users_change(delta=0, username_source="username", should_exist=False)
     def test_create_invalid_user(self, api_manager: ApiManager, username: str, password: str, role: str, error_key: str, error_value: str):
         create_user_request = CreateUserRequest(username=username, password=password, role=role)
         api_manager.admin_steps.create_invalid_user(create_user_request, error_key, error_value)
