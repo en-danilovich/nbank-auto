@@ -12,6 +12,7 @@ from src.main.ui.pages.bank_alert import BankAlert
 
 
 @pytest.mark.ui
+@pytest.mark.usefixtures('admin_session_autologin', 'browser_match_guard')
 class TestCreateUser:
     @pytest.mark.admin_session
     @pytest.mark.usefixtures('api_manager')

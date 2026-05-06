@@ -69,7 +69,7 @@ def entity_will_be_created(request: pytest.FixtureRequest):
 
 
 @pytest.fixture(autouse=True, scope="function")
-def check_all_users_change(request: pytest.FixtureRequest):
+def check_all_users_change(request: pytest.FixtureRequest, created_objects):
     """
     Marker-driven post-action verification for API tests.
 
@@ -89,6 +89,11 @@ def check_all_users_change(request: pytest.FixtureRequest):
         should_exist = delta > 0
     should_exist = bool(should_exist)
 
+    # In xdist (or other parallel runs) global "count delta" is not stable, because other tests
+    # can create/delete users between our before/after snapshots. Allow opting into strict mode.
+    strict_delta = bool(mark.kwargs.get("strict_delta", False))
+    running_xdist = hasattr(request.config, "workerinput")
+
     api_manager: ApiManager = request.getfixturevalue("api_manager")
 
     # Resolve username early (before yield), while parametrized args are still accessible.
@@ -97,18 +102,33 @@ def check_all_users_change(request: pytest.FixtureRequest):
         resolved_username = str(_resolve_source(request, username_source))
 
     before = api_manager.admin_steps.get_all_users()
+    before_usernames = {u.username for u in before}
     yield
     after = api_manager.admin_steps.get_all_users()
-
-    assert len(after) - len(before) == delta, (
-        f"Expected users delta={delta} (after-before), but got {len(after) - len(before)}. "
-        f"before={len(before)}, after={len(after)}"
-    )
+    after_usernames = {u.username for u in after}
 
     if resolved_username is not None:
-        found = any(u.username == resolved_username for u in after)
-        assert found is should_exist, (
-            f"Expected user '{resolved_username}' existence={should_exist} via GET /admin/users, but found={found}"
+        if should_exist:
+            assert resolved_username in after_usernames, (
+                f"Expected user '{resolved_username}' existence=True via GET /admin/users, "
+                f"but it was not found."
+            )
+            # In sequential runs we can also assert the user wasn't present before (true "creation").
+            if (not running_xdist) and delta > 0:
+                assert resolved_username not in before_usernames, (
+                    f"Expected user '{resolved_username}' to be newly created, but it already existed before."
+                )
+        else:
+            assert resolved_username not in after_usernames, (
+                f"Expected user '{resolved_username}' existence=False via GET /admin/users, "
+                f"but it was found."
+            )
+
+    # Count delta is reliable only in sequential runs (or when explicitly requested).
+    if strict_delta and not running_xdist:
+        assert len(after) - len(before) == delta, (
+            f"Expected users delta={delta} (after-before), but got {len(after) - len(before)}. "
+            f"before={len(before)}, after={len(after)}"
         )
 
 

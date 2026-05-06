@@ -14,7 +14,9 @@ from src.main.api.models.user_account_context import UserAccountContext
 
 
 @pytest.mark.ui
+@pytest.mark.usefixtures("browser_match_guard")
 class TestAccountTransfer:
+    @pytest.mark.usefixtures("user_session_extension")
     @pytest.mark.user_session(10)
     def test_transfer_money_between_own_accounts(self, page: Page, api_manager: ApiManager,
                                                  user_request: CreateUserRequest):
