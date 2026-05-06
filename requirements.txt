@@ -5,3 +5,4 @@ softest
 rstr
 pytest-playwright
 faker
+pytest-xdist

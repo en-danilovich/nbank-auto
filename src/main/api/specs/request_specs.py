@@ -12,10 +12,6 @@ from src.main.api.specs.response_specs import ResponseSpecs
 
 class RequestSpecs:
     @staticmethod
-    def _base_url() -> str:
-        return f"{Config.get('server')}{Config.get('apiVersion')}"
-
-    @staticmethod
     def default_req_headers() -> Dict[str, str]:
         return {
             "Content-Type": "application/json",

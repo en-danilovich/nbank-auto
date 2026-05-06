@@ -37,11 +37,6 @@ class ModelComparator:
 
     @staticmethod
     def _get_field_value(obj: Any, field_name: str):
-        current_class = obj.__class__
-
-        while current_class:
-            if hasattr(obj, field_name):
-                return getattr(obj, field_name)
-            current_class = current_class.__base__
-
+        if hasattr(obj, field_name):
+            return getattr(obj, field_name)
         raise AttributeError(f'Field {field_name} not found in class {obj.__class__.__name__}')

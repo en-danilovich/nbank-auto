@@ -7,15 +7,14 @@ from typing import Dict, List, Optional, Type
 class ComparisonRule:
     def __init__(self, response_class_name: str, field_pairs: List[str]):
         self._response_class_name = response_class_name
-        self.field_pairs = field_pairs
         self._field_mapping: Dict[str, str] = {}
 
         for pair in field_pairs:
             parts = pair.split('=')
             if len(parts) == 2:
-                self.field_mapping[parts[0].strip()] = parts[1].strip()
+                self._field_mapping[parts[0].strip()] = parts[1].strip()
             else:
-                self.field_mapping[pair.strip()] = pair.strip()
+                self._field_mapping[pair.strip()] = pair.strip()
 
     @property
     def response_class_name(self) -> str:
