@@ -9,6 +9,7 @@ from src.main.api.models.create_user_request import CreateUserRequest
 from src.main.api.models.create_account_response import CreateAccountResponse
 
 @pytest.mark.ui
+@pytest.mark.usefixtures("user_session_extension", "browser_match_guard")
 class TestCreateAccount:
     @pytest.mark.user_session(10)
     @pytest.mark.check_accounts_change(delta=1)

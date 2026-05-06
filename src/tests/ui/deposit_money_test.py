@@ -10,6 +10,7 @@ from src.main.api.models.create_user_request import CreateUserRequest
 from src.main.api.models.create_account_response import CreateAccountResponse
 
 @pytest.mark.ui
+@pytest.mark.usefixtures("user_session_extension", "browser_match_guard")
 class TestDepositMoney:
     @pytest.mark.user_session(10)
     def test_deposit_money_to_account(self, page: Page, api_manager:ApiManager, user_request: CreateUserRequest):
