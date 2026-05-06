@@ -33,3 +33,15 @@ class AdminPanel(BasePage):
     def wait_for_username(self, username: str):
         expect(self.get_all_users_locator()).to_contain_text([username])
         return self
+
+    def verify_page_is_visible(self):
+        expect(self.admin_panel_text).to_be_visible()
+        return self
+
+    def check_user_visibility(self, username: str, is_visible: bool):
+        match = any(u.username == username for u in self.get_all_users())
+        if is_visible:
+            assert match
+        else:
+            assert not match
+        return self

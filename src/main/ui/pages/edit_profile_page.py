@@ -32,7 +32,8 @@ class EditProfilePage(BasePage):
         return self
 
     def click_save(self):
-        self.save_button.click()
+        with self.page.expect_event("dialog"):
+            self.save_button.click()
         return self
 
     def click_home(self):

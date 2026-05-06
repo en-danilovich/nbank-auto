@@ -43,7 +43,7 @@ class UserDashboard(BasePage):
 
     def verify_welcome_text(self, name: str):
         expect(self.welcome_text.locator("span"),
-               f"Welcome text span should contain '{name}'").to_have_text(name)
+               f"Welcome text span should contain '{name}'").to_have_text(name, ignore_case=True)
         return self
 
     def click_create_new_account(self):

@@ -9,19 +9,18 @@ from src.main.api.models.create_user_request import CreateUserRequest
 
 @pytest.mark.ui
 @pytest.mark.browsers('webkit')
+@pytest.mark.usefixtures('browser_match_guard')
 class TestLoginUser:
     @pytest.mark.usefixtures("admin_user_request")
     def test_admin_can_login_with_correct_data(self, page: Page, admin_user_request: CreateUserRequest):
-        admin_page = LoginPage(page).open()\
+        LoginPage(page).open()\
             .login(admin_user_request.username, admin_user_request.password)\
-            .get_page(AdminPanel)
-
-        expect(admin_page.admin_panel_text).to_be_visible()
+            .get_page(AdminPanel)\
+            .verify_page_is_visible()
 
     @pytest.mark.usefixtures("user_request")
     def test_user_can_login_with_correct_data(self, page: Page, user_request: CreateUserRequest):
-        user_dashboard = LoginPage(page).open() \
+         LoginPage(page).open() \
             .login(user_request.username, user_request.password) \
-            .get_page(UserDashboard)
-
-        expect(user_dashboard.dashboard_text).to_be_visible()
+            .get_page(UserDashboard)\
+            .verify_page_is_visible()

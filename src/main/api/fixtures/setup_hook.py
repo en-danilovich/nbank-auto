@@ -9,7 +9,7 @@ from src.main.api.utils.helpers.browsers import norm_browser_name
 from src.main.ui.pages.login_page import LoginPage
 
 
-@pytest.fixture(autouse=True, scope="function")
+@pytest.fixture(scope="function")
 def user_session_extension(request: pytest.FixtureRequest, page: Page, user_factory):
     mark = request.node.get_closest_marker("user_session")
     if not mark:
@@ -27,7 +27,7 @@ def user_session_extension(request: pytest.FixtureRequest, page: Page, user_fact
 
     SessionStorage.clear()
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def admin_session_autologin(request: pytest.FixtureRequest, page: Page, admin_user_request: CreateUserRequest):
     mark = request.node.get_closest_marker("admin_session")
     if not mark:
@@ -35,7 +35,7 @@ def admin_session_autologin(request: pytest.FixtureRequest, page: Page, admin_us
 
     LoginPage(page).auth_as_user(admin_user_request)
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def browser_match_guard(request):
     mark = request.node.get_closest_marker("browsers")
     if not mark:

@@ -22,7 +22,7 @@ class BasePage(ABC):
         if count == 0:
             return []
         element.first.wait_for(state="attached", timeout=10_000)
-        return [constructor(element.nth(index)) for index in range(element.count())]
+        return [constructor(element.nth(index)) for index in range(count)]
 
     def auth_as_user(self, user_request: CreateUserRequest) -> None:
         auth_token = RequestSpecs.auth_as_user(user_request.username, user_request.password).get("Authorization")
@@ -44,7 +44,7 @@ class BasePage(ABC):
 
     @property
     def header_user_name(self):
-        return self.page.locator("span.user-name")
+        return self.page.locator(".user-info span.user-name")
 
     def open(self: T) -> T:
         target = self.url()
@@ -65,9 +65,10 @@ class BasePage(ABC):
         api_url = f"{self.base_url}{Config.get('api_version')}{endpoint.value.url}"
         return self.page.expect_response(lambda res: res.url == api_url and res.status == status)
 
-    def check_alert_message_and_accept(self: T, expected_text: str) -> T:
+    def check_alert_message_and_accept(self: T, expected_text: str | list[str]) -> T:
         def _handler(d: Dialog) -> None:
-            assert expected_text in d.message, f"Alert text mismatch: {d.message}"
+            candidates = [expected_text] if isinstance(expected_text, str) else expected_text
+            assert any(c in d.message for c in candidates), f"Alert text mismatch: {d.message}"
             d.accept()
         self.page.once("dialog", _handler)
         return self
