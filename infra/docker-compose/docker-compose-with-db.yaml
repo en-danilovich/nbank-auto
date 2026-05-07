@@ -1,0 +1,52 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: nbank
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d nbank" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nbank-network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    image: nobugsme/nbank:with_database_with_fix
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nbank
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    ports:
+      - "4111:4111"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:4111/actuator/health || exit 1" ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - nbank-network
+
+  frontend:
+    image: nobugsme/nbank-ui:with_nginx
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - nbank-network
+
+networks:
+  nbank-network:
+
+volumes:
+  postgres_data:
