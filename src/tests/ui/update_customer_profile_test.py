@@ -9,6 +9,7 @@ from src.main.api.models.customer.update_customer_profile_request import UpdateC
 
 @pytest.mark.ui
 @pytest.mark.usefixtures("user_session_extension", "browser_match_guard")
+@pytest.mark.browsers('chrome')
 class TestUpdateCustomerProfile:
     DEFAULT_NAME = "Noname"
 
@@ -51,3 +52,18 @@ class TestUpdateCustomerProfile:
             .verify_header_username(self.DEFAULT_NAME)\
             .click_home()\
             .verify_welcome_text(self.DEFAULT_NAME)
+
+    @pytest.mark.user_session(10)
+    @pytest.mark.parametrize('preset_name', ['John Smith'])
+    @pytest.mark.check_profile_name(expected_source="preset_name")
+    def test_update_customer_profile_with_same_name(self, page: Page, api_manager: ApiManager,
+                                                    user_request: CreateUserRequest, preset_name: str):
+        api_manager.user_steps.update_profile(user_request, UpdateCustomerProfileRequest(name=preset_name))
+
+        UserDashboard(page).open()\
+            .click_username_in_header()\
+            .verify_page_is_visible()\
+            .verify_name_is_loaded(preset_name)\
+            .enter_name(preset_name)\
+            .check_alert_message_and_accept(BankAlert.NAME_IS_SAME_AS_CURRENT)\
+            .click_save()

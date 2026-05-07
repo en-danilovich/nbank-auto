@@ -51,7 +51,8 @@ class UserDashboard(BasePage):
         return self
 
     def click_username_in_header(self) -> EditProfilePage:
-        self.username_header.click()
+        with self.expect_api_response(Endpoint.GET_CUSTOMER_PROFILE):
+            self.username_header.click()
         return self.get_page(EditProfilePage)
 
     def click_make_transfer(self) -> TransferPage:

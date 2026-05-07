@@ -1,5 +1,6 @@
 from typing import Any
 from pathlib import Path
+import os
 
 
 class Config:
@@ -21,4 +22,8 @@ class Config:
 
     @staticmethod
     def get(key: str, default_value: Any = None) -> Any:
+        # Allow overriding config.properties via environment variables (useful for CI / different backend images).
+        env_val = os.getenv(key)
+        if env_val is not None:
+            return env_val
         return Config()._properties.get(key, default_value)

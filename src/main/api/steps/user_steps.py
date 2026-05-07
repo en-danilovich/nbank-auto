@@ -60,7 +60,7 @@ class UserSteps(BaseSteps):
         ModelAssertions(account_deposit_request, account_deposit_response).match()
 
         if current_account_balance:
-            expected_balance = current_account_balance + deposit_balance
+            expected_balance = round(current_account_balance + deposit_balance, 2)
             assert account_deposit_response.balance == expected_balance, (
                 f"Expected account balance is incorrect, expected {expected_balance}, but got {account_deposit_response.balance}"
             )
@@ -180,6 +180,7 @@ class UserSteps(BaseSteps):
     def verify_account_balance(self, user_request: CreateUserRequest, account_id: int, expected_balance: float):
         profile = self.get_profile(user_request)
         account = self._get_account_data_from_profile(profile, account_id)
+        expected_balance = round(expected_balance, 2)
 
         assert expected_balance == account.balance, (
             f"Verify account balance is '{expected_balance}', but got {account.balance}."

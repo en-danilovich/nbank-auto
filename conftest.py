@@ -32,6 +32,12 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         default=os.getenv("PYTEST_SEED"),
         help="Seed for random generators. If not set, a new seed is generated per run (and shared across xdist workers).",
     )
+    parser.addoption(
+        "--api-version",
+        action="store",
+        default=os.getenv("API_VERSION"),
+        help="Backend version under test. Used with @pytest.mark.api_version(...). Example: --api-version with_database",
+    )
 
 
 def pytest_configure(config: pytest.Config) -> None:
@@ -45,6 +51,10 @@ def pytest_configure(config: pytest.Config) -> None:
 
     config._nbank_seed = int(seed)
     _apply_global_seed(int(seed))
+
+    api_version = config.getoption("--api-version")
+    if api_version:
+        os.environ["API_VERSION"] = str(api_version)
 
 
 def pytest_configure_node(node) -> None:
@@ -82,7 +92,16 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     for item in items:
         is_ui = bool(item.get_closest_marker("ui"))
         browsers_mark = item.get_closest_marker("browsers")
+        api_ver_mark = item.get_closest_marker("api_version")
         fixts = getattr(item, "fixturenames", ()) or ()
+
+        # Backend version filtering: if test is tagged with @api_version("..."),
+        # it runs only when --api-version matches. Otherwise, skip it.
+        if api_ver_mark:
+            expected = str(api_ver_mark.args[0]) if api_ver_mark.args else ""
+            actual = str(config.getoption("--api-version") or "")
+            if not actual or actual != expected:
+                continue
 
         if browsers_mark:
             allowed = {norm_browser_name(str(x)) for x in (browsers_mark.args or ())}
