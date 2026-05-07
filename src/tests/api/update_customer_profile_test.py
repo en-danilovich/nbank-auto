@@ -3,6 +3,7 @@ import pytest
 from src.main.api.classes.api_manager import ApiManager
 from src.main.api.generators.random_data import RandomData
 from src.main.api.generators.random_model_generator import RandomModelGenerator
+from src.main.api.models.comparison.dao_and_model_assertions import DaoAndModelAssertions
 from src.main.api.models.create_user_request import CreateUserRequest
 from src.main.api.models.customer.update_customer_profile_request import UpdateCustomerProfileRequest
 from src.main.api.requests.skeleton.endpoint import Endpoint
@@ -12,6 +13,7 @@ from src.main.api.specs.response_specs import ResponseSpecs
 from src.tests.api.base_api_test import BaseTest
 
 
+@pytest.mark.api_version("with_database")
 class TestUpdateCustomerProfile(BaseTest):
     def test_update_customer_profile_no_auth(self):
         CrudRequester(
@@ -27,7 +29,10 @@ class TestUpdateCustomerProfile(BaseTest):
                               UpdateCustomerProfileRequest(name='A a')])
     def test_update_customer_profile(self, api_manager: ApiManager, user_request: CreateUserRequest,
                                      update_customer_profile_request: UpdateCustomerProfileRequest):
-        api_manager.user_steps.update_profile(user_request, update_customer_profile_request)
+        update_response = api_manager.user_steps.update_profile(user_request, update_customer_profile_request)
+
+        user_dao = api_manager.database_steps.get_user_by_username(user_request.username)
+        DaoAndModelAssertions.assert_that(update_response.customer, user_dao).match()
 
     @pytest.mark.usefixtures('api_manager', 'user_request')
     @pytest.mark.check_profile_name()
@@ -50,3 +55,6 @@ class TestUpdateCustomerProfile(BaseTest):
         api_manager.user_steps.update_profile_using_invalid_data(user_request,
                                                                  UpdateCustomerProfileRequest(name=name),
                                                                  'Name must contain two words with letters only')
+
+        user_dao = api_manager.database_steps.get_user_by_username(user_request.username)
+        assert user_dao.name is None, f"Name should remain unchanged in DB after invalid update, but got: {user_dao.name!r}"
