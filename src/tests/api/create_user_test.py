@@ -8,6 +8,7 @@ from src.main.api.models.create_user_request import CreateUserRequest
 
 
 @pytest.mark.api
+@pytest.mark.api_version("with_database")
 class TestCreateUser:
     @pytest.mark.usefixtures('api_manager')
     @pytest.mark.parametrize('create_user_request', [RandomModelGenerator.generate(CreateUserRequest)])
@@ -32,4 +33,8 @@ class TestCreateUser:
     def test_create_invalid_user(self, api_manager: ApiManager, username: str, password: str, role: str, error_key: str, error_value: str):
         create_user_request = CreateUserRequest(username=username, password=password, role=role)
         api_manager.admin_steps.create_invalid_user(create_user_request, error_key, error_value)
+
+        # DB negative check: invalid create must not write user into customers table.
+        user_dao = api_manager.database_steps.find_user_by_username(username)
+        assert user_dao is None, f"User '{username}' should NOT exist in DB after invalid create, but was found: {user_dao}"
     

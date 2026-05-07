@@ -14,7 +14,7 @@ T = TypeVar('T', bound=BaseModel)
 class CrudRequester(HttpRequest, CrudEndpointInterface):
     @property
     def base_url(self) -> str:
-        return f"{Config.get('server')}{Config.get('api_version')}"
+        return f"{Config.get('server')}{Config.get('server_api_version')}"
     
     def post(self, model: Optional[T] = None) -> requests.Response:
         body = model.model_dump() if model is not None else ''

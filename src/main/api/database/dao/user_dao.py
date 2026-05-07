@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Optional
 
 
@@ -16,3 +17,5 @@ class UserDao:
     password: str
     name: Optional[str]
     role: str
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]

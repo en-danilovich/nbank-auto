@@ -10,6 +10,7 @@ class BankAlert(str, Enum):
     MAX_DEPOSIT_EXCEEDED = "❌ Please deposit less or equal to 5000$."
     PROFILE_UPDATED_SUCCESSFULLY = "✅ Name updated successfully!"
     ENTER_VALID_NAME = "❌ Please enter a valid name."
+    NAME_IS_SAME_AS_CURRENT = "⚠️ New name is the same as the current one."
     NAME_MUST_CONTAIN_TWO_WORDS = "Name must contain two words with letters only"
     FILL_ALL_FIELDS = "❌ Please fill all fields and confirm."
     RECIPIENT_NAME_MISMATCH = "❌ The recipient name does not match the registered name."

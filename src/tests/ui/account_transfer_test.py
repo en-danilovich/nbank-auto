@@ -48,7 +48,7 @@ class TestAccountTransfer:
         user_accounts = api_manager.user_steps.get_all_accounts(user_request)
         sender = next(a for a in user_accounts if a.accountNumber == sender_account)
         receiver = next(a for a in user_accounts if a.accountNumber == receiver_account)
-        assert sender.balance == deposit_amount - transfer_amount
+        assert sender.balance == round(deposit_amount - transfer_amount, 2)
         assert receiver.balance == transfer_amount
 
     @pytest.mark.with_users(accounts_count=1)
@@ -88,7 +88,7 @@ class TestAccountTransfer:
     @pytest.mark.with_users(accounts_count=2, balance=15000)
     @pytest.mark.parametrize('amount, alert_msg', [
         (0, BankAlert.TRANSFER_INSUFFICIENT_FUNDS),
-        (10000.01, BankAlert.TRANSFER_INSUFFICIENT_FUNDS),
+        (10000.01, BankAlert.TRANSFER_MAX_AMOUNT),
     ])
     def test_transfer_invalid_amount(self, page: Page, api_manager: ApiManager,
                                      accounts_with_balance: List[UserAccountContext],

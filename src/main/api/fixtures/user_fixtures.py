@@ -21,7 +21,9 @@ def user_factory(api_manager: ApiManager):
     yield create_user
 
 @pytest.fixture(scope='function')
-def user_request(user_factory):
+def user_request(request, user_factory):
+    if request.node.get_closest_marker("user_session") is not None:
+        request.getfixturevalue("user_session_extension")
     try:
         return SessionStorage.get_user(0)
     except:

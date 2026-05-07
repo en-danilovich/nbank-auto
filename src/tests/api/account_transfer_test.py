@@ -70,7 +70,7 @@ class TestAccountTransfer(BaseTest):
     @pytest.mark.parametrize('transfer_amount, error_message', [
         (-0.01, ErrorMessages.INVALID_TRANSFER),
         (0, ErrorMessages.INVALID_TRANSFER),
-        (10000.1, ErrorMessages.INVALID_TRANSFER),
+        (10000.1, ErrorMessages.MAX_TRANSFER_AMOUNT_MSG),
     ])
     def test_account_transfer_invalid_transfer_amount(self, accounts_with_balance: List[UserAccountContext],
                                                       api_manager: ApiManager,

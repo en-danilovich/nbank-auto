@@ -25,10 +25,16 @@ class EditProfilePage(BasePage):
 
     def verify_page_is_visible(self):
         expect(self.edit_profile_header).to_be_visible()
+        self.page.wait_for_load_state('networkidle')
+        return self
+
+    def verify_name_is_loaded(self, expected_name: str):
+        expect(self.name_input).to_have_value(expected_name)
         return self
 
     def enter_name(self, name: str):
         self.name_input.fill(name)
+        expect(self.name_input).to_have_value(name)
         return self
 
     def click_save(self):

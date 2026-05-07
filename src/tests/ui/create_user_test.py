@@ -32,7 +32,7 @@ class TestCreateUser:
             u for u in all_users_after
             if u.username == new_user_request.username
         )
-        ModelAssertions(created_user, new_user_request).match()
+        ModelAssertions(new_user_request, created_user).match()
 
     @pytest.mark.admin_session
     @pytest.mark.usefixtures('api_manager')
