@@ -6,6 +6,8 @@ from src.main.api.models.accounts.account_deposit_request import AccountDepositR
 from src.main.api.models.accounts.account_deposit_response import AccountDepositResponse
 from src.main.api.models.accounts.account_transfer_request import AccountTransferRequest
 from src.main.api.models.accounts.account_transfer_response import AccountTransferResponse
+from src.main.api.models.accounts.account_transfer_with_fraud_check_request import AccountTransferWithFraudCheckRequest
+from src.main.api.models.accounts.account_transfer_with_fraud_check_response import AccountTransferWithFraudCheckResponse
 from src.main.api.models.create_account_response import CreateAccountResponse
 from src.main.api.models.create_user_request import CreateUserRequest
 from src.main.api.models.create_user_response import CreateUserResponse
@@ -30,25 +32,25 @@ class Endpoint(Enum):
         request_model=CreateUserRequest,
         response_model=CreateUserResponse
     )
-    
+
     ADMIN_DELETE_USER = EndpointConfig(
         url='/admin/users',
         request_model=None,
         response_model=None
     )
-    
+
     ADMIN_GET_ALL_USERS = EndpointConfig(
         url='/admin/users',
         request_model=None,
         response_model=List[CreateUserResponse]
     )
-    
+
     LOGIN_USER = EndpointConfig(
         url='/auth/login',
         request_model=LoginUserRequest,
         response_model=LoginUserResponse
     )
-    
+
     CREATE_ACCOUNT = EndpointConfig(
         url='/accounts',
         request_model=None,
@@ -71,6 +73,12 @@ class Endpoint(Enum):
         url='/accounts/transfer',
         request_model=AccountTransferRequest,
         response_model=AccountTransferResponse,
+    )
+
+    ACCOUNTS_TRANSFER_WITH_FRAUD_CHECK = EndpointConfig(
+        url='/accounts/transfer-with-fraud-check',
+        request_model=AccountTransferWithFraudCheckRequest,
+        response_model=AccountTransferWithFraudCheckResponse,
     )
 
     UPDATE_CUSTOMER_PROFILE = EndpointConfig(

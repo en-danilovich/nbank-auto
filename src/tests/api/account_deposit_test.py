@@ -95,7 +95,7 @@ class TestAccountDeposit(BaseTest):
     @pytest.mark.usefixtures('api_manager', 'user_request')
     def test_account_deposit_nonexisting_account(self, api_manager: ApiManager, user_request: CreateUserRequest):
         api_manager.user_steps.deposit_money_to_invalid_account(user_request,
-                                                                RandomModelGenerator.generate(AccountDepositRequest).id)
+                                                                RandomModelGenerator.generate(AccountDepositRequest).accountId)
 
     @pytest.mark.usefixtures('api_manager', 'user_request', 'account_data')
     @pytest.mark.parametrize('balance, error_message', [

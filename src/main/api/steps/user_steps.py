@@ -5,6 +5,8 @@ from src.main.api.models.accounts.account_deposit_request import AccountDepositR
 from src.main.api.models.accounts.account_deposit_response import AccountDepositResponse
 from src.main.api.models.accounts.account_transfer_request import AccountTransferRequest
 from src.main.api.models.accounts.account_transfer_response import AccountTransferResponse
+from src.main.api.models.accounts.account_transfer_with_fraud_check_request import AccountTransferWithFraudCheckRequest
+from src.main.api.models.accounts.account_transfer_with_fraud_check_response import AccountTransferWithFraudCheckResponse
 from typing import List
 
 from src.main.api.models.create_user_request import CreateUserRequest
@@ -48,8 +50,8 @@ class UserSteps(BaseSteps):
     def deposit_money_to_account(self, user_request: CreateUserRequest, account_id: int, deposit_balance: float,
                                  current_account_balance: Optional[float] = None) -> AccountDepositResponse:
         account_deposit_request: AccountDepositRequest = AccountDepositRequest(
-            id=account_id,
-            balance=deposit_balance,
+            accountId=account_id,
+            amount=deposit_balance,
         )
         account_deposit_response: AccountDepositResponse = ValidatedCrudRequester(
             RequestSpecs.auth_as_user(user_request.username, user_request.password),
@@ -65,21 +67,19 @@ class UserSteps(BaseSteps):
                 f"Expected account balance is incorrect, expected {expected_balance}, but got {account_deposit_response.balance}"
             )
 
-        expected_fields = {
-            "amount": account_deposit_request.balance,
-            "type": "DEPOSIT",
-            "relatedAccountId": account_deposit_request.id}
-        assert account_deposit_response.transactions
-        assert any(expected_fields.items() <= t.items() for t in account_deposit_response.transactions), (
-            f"Expected to have created transaction {expected_fields} in account, but got {account_deposit_response.transactions}"
+        assert account_deposit_response.depositAmount == account_deposit_request.amount, (
+            f"Expected depositAmount {account_deposit_request.amount}, but got {account_deposit_response.depositAmount}"
+        )
+        assert account_deposit_response.transactionId, (
+            f"Expected non-empty transactionId in deposit response, but got {account_deposit_response.transactionId}"
         )
 
         return account_deposit_response
 
     def deposit_money_to_invalid_account(self, user_request: CreateUserRequest, account_id: int):
         account_deposit_request: AccountDepositRequest = AccountDepositRequest(
-            id=account_id,
-            balance=RandomData.get_deposit_balance(),
+            accountId=account_id,
+            amount=RandomData.get_deposit_balance(),
         )
         CrudRequester(
             RequestSpecs.auth_as_user(user_request.username, user_request.password),
@@ -92,8 +92,8 @@ class UserSteps(BaseSteps):
                                            balance: float,
                                            error_message: str):
         account_deposit_request: AccountDepositRequest = AccountDepositRequest(
-            id=account_id,
-            balance=balance,
+            accountId=account_id,
+            amount=balance,
         )
 
         CrudRequester(
@@ -104,8 +104,8 @@ class UserSteps(BaseSteps):
 
     def deposit_money_with_empty_balance(self, user_request: CreateUserRequest, account_id: int, balance: str | None):
         account_deposit_request: AccountDepositRequest = AccountDepositRequest(
-            id=account_id,
-            balance=balance,
+            accountId=account_id,
+            amount=balance,
         )
 
         CrudRequester(
@@ -198,3 +198,22 @@ class UserSteps(BaseSteps):
         ).get()
 
         return user_accounts
+
+    def transfer_with_fraud_check(
+        self,
+        user_request: CreateUserRequest,
+        sender_account_id: int,
+        receiver_account_id: int,
+        amount: float,
+    ) -> AccountTransferWithFraudCheckResponse:
+        transfer_request = AccountTransferWithFraudCheckRequest(
+            senderAccountId=sender_account_id,
+            receiverAccountId=receiver_account_id,
+            amount=amount,
+        )
+        transfer_response: AccountTransferWithFraudCheckResponse = ValidatedCrudRequester(
+            RequestSpecs.auth_as_user(user_request.username, user_request.password),
+            Endpoint.ACCOUNTS_TRANSFER_WITH_FRAUD_CHECK,
+            ResponseSpecs.request_returns_ok()
+        ).post(transfer_request)
+        return transfer_response
