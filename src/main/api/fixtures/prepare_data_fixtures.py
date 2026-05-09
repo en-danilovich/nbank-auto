@@ -50,7 +50,13 @@ def prepared_user_accounts(
         account: CreateAccountResponse = api_manager.user_steps.create_account(user)
 
         if deposit is not None:
-            api_manager.user_steps.deposit_money_to_account(user, account.id, float(deposit))
+            # Backend caps a single deposit call at 5000; chunk to support larger balances.
+            remaining = float(deposit)
+            while remaining > 0:
+                chunk = min(remaining, 5000.0)
+                api_manager.user_steps.deposit_money_to_account(user, account.id, chunk)
+                remaining = round(remaining - chunk, 2)
+            account.balance = float(deposit)
 
         result.append(PreparedUserAccount(user=user, account=account))
     return result

@@ -48,7 +48,12 @@ class ResponseSpecs:
             assert response.status_code == HTTPStatus.BAD_REQUEST, (
                 f"Expected 400 BAD_REQUEST, got {response.status_code}. Response: {response.text}"
             )
-            actual_value = response.text
+            # Newer backend versions wrap error responses as {"message": "..."}; older ones return plain text.
+            try:
+                payload = response.json()
+                actual_value = payload.get("message", response.text) if isinstance(payload, dict) else response.text
+            except ValueError:
+                actual_value = response.text
             assert error_message == actual_value, (
                 f"Expected error message '{error_message}', but got '{actual_value}'."
             )

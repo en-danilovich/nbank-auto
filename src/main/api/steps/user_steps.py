@@ -111,7 +111,9 @@ class UserSteps(BaseSteps):
         CrudRequester(
             RequestSpecs.auth_as_user(user_request.username, user_request.password),
             Endpoint.ACCOUNTS_DEPOSIT,
-            ResponseSpecs.internal_server_error()
+            ResponseSpecs.request_returns_bad_request_with_text(
+                "Invalid field types: accountId must be integer, amount must be number"
+            )
         ).post(account_deposit_request)
 
     def update_profile(self, user_request: CreateUserRequest, update_customer_profile_request: UpdateCustomerProfileRequest) -> UpdateCustomerProfileResponse:
@@ -217,3 +219,20 @@ class UserSteps(BaseSteps):
             ResponseSpecs.request_returns_ok()
         ).post(transfer_request)
         return transfer_response
+
+    def transfer_with_fraud_check_invalid_data(self, user_request: CreateUserRequest,
+                                               transfer_request: AccountTransferWithFraudCheckRequest,
+                                               error_message: str):
+        CrudRequester(
+            RequestSpecs.auth_as_user(user_request.username, user_request.password),
+            Endpoint.ACCOUNTS_TRANSFER_WITH_FRAUD_CHECK,
+            ResponseSpecs.request_returns_bad_request_with_text(error_message)
+        ).post(transfer_request)
+
+    def transfer_with_fraud_check_forbidden_action(self, user_request: CreateUserRequest,
+                                                    transfer_request: AccountTransferWithFraudCheckRequest):
+        CrudRequester(
+            RequestSpecs.auth_as_user(user_request.username, user_request.password),
+            Endpoint.ACCOUNTS_TRANSFER_WITH_FRAUD_CHECK,
+            ResponseSpecs.action_forbidden()
+        ).post(transfer_request)

@@ -20,6 +20,30 @@ class FraudMockConfig:
     response_body: Dict[str, Any] = field(default_factory=dict)
 
 
+@dataclass
+class FraudMockServer:
+    """Yielded by the fraud_check_mock_server fixture. Exposes the call log so
+    tests can assert the backend did (or did not) reach out to the fraud service."""
+
+    cfg: FraudMockConfig
+    _calls: List[Dict[str, Any]] = field(default_factory=list)
+    _lock: threading.Lock = field(default_factory=threading.Lock)
+
+    def record(self, method: str, path: str, body: bytes, matched: bool) -> None:
+        with self._lock:
+            self._calls.append({"method": method, "path": path, "body": body, "matched": matched})
+
+    @property
+    def calls(self) -> List[Dict[str, Any]]:
+        with self._lock:
+            return list(self._calls)
+
+    @property
+    def call_count(self) -> int:
+        with self._lock:
+            return len(self._calls)
+
+
 def _load_fraud_mock_config(request: pytest.FixtureRequest) -> Optional[FraudMockConfig]:
     marker = request.node.get_closest_marker("fraud_check_mock")
     if marker is None:
@@ -39,13 +63,36 @@ class _ReusableHTTPServer(HTTPServer):
         super().server_bind()
 
 
-def _build_handler(cfg: FraudMockConfig):
+def _read_chunked_body(rfile) -> bytes:
+    """Read an HTTP/1.1 chunked-transfer body. Spring's WebClient sends fraud-check
+    payloads chunked with no Content-Length, so the simpler read(Content-Length) path
+    yields an empty body."""
+    body = b""
+    while True:
+        line = rfile.readline()
+        if not line:
+            break
+        size_token = line.strip().split(b";", 1)[0]
+        if not size_token:
+            continue
+        size = int(size_token, 16)
+        if size == 0:
+            rfile.readline()
+            break
+        body += rfile.read(size)
+        rfile.readline()
+    return body
+
+
+def _build_handler(cfg: FraudMockConfig, server: "FraudMockServer"):
     pattern = re.compile(cfg.endpoint)
     body_bytes = json.dumps(cfg.response_body).encode("utf-8")
 
     class _Handler(BaseHTTPRequestHandler):
-        def _respond(self):
-            if not pattern.search(self.path):
+        def _respond(self, method: str, body: bytes):
+            matched = bool(pattern.search(self.path))
+            server.record(method=method, path=self.path, body=body, matched=matched)
+            if not matched:
                 self.send_response(404)
                 self.send_header("Content-Type", "application/json")
                 self.end_headers()
@@ -59,16 +106,20 @@ def _build_handler(cfg: FraudMockConfig):
             self.wfile.write(body_bytes)
 
         def do_POST(self):
+            body = b""
             try:
-                length = int(self.headers.get("Content-Length") or 0)
-                if length:
-                    self.rfile.read(length)
+                if (self.headers.get("Transfer-Encoding") or "").lower() == "chunked":
+                    body = _read_chunked_body(self.rfile)
+                else:
+                    length = int(self.headers.get("Content-Length") or 0)
+                    if length:
+                        body = self.rfile.read(length)
             except Exception:
                 pass
-            self._respond()
+            self._respond("POST", body)
 
         def do_GET(self):
-            self._respond()
+            self._respond("GET", b"")
 
         def log_message(self, format, *args):
             logger.debug("FraudMock %s - %s", self.address_string(), format % args)
@@ -83,7 +134,8 @@ def fraud_check_mock_server(request: pytest.FixtureRequest):
         yield
         return
 
-    handler_cls = _build_handler(cfg)
+    mock_server = FraudMockServer(cfg=cfg)
+    handler_cls = _build_handler(cfg, mock_server)
     servers: List[_ReusableHTTPServer] = []
     threads: List[threading.Thread] = []
 
@@ -114,7 +166,7 @@ def fraud_check_mock_server(request: pytest.FixtureRequest):
         )
 
     try:
-        yield cfg
+        yield mock_server
     finally:
         for srv in servers:
             try:

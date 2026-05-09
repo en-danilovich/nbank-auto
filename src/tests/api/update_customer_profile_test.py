@@ -4,7 +4,6 @@ from src.main.api.classes.api_manager import ApiManager
 from src.main.api.generators.random_data import RandomData
 from src.main.api.generators.random_model_generator import RandomModelGenerator
 from src.main.api.models.comparison.dao_and_model_assertions import DaoAndModelAssertions
-from src.main.api.models.create_user_request import CreateUserRequest
 from src.main.api.models.customer.update_customer_profile_request import UpdateCustomerProfileRequest
 from src.main.api.requests.skeleton.endpoint import Endpoint
 from src.main.api.requests.skeleton.requesters.crud_requester import CrudRequester
@@ -22,19 +21,20 @@ class TestUpdateCustomerProfile(BaseTest):
             response_spec=ResponseSpecs.unauthorized_request()
         ).post()
 
-    @pytest.mark.usefixtures('api_manager', 'user_request')
+    @pytest.mark.prepare_users(number=1)
     @pytest.mark.check_profile_name(expected_source="update_customer_profile_request.name")
     @pytest.mark.parametrize('update_customer_profile_request',
                              [RandomModelGenerator.generate(UpdateCustomerProfileRequest),
                               UpdateCustomerProfileRequest(name='A a')])
-    def test_update_customer_profile(self, api_manager: ApiManager, user_request: CreateUserRequest,
+    def test_update_customer_profile(self, api_manager: ApiManager, prepared_users,
                                      update_customer_profile_request: UpdateCustomerProfileRequest):
-        update_response = api_manager.user_steps.update_profile(user_request, update_customer_profile_request)
+        user = prepared_users[0]
+        update_response = api_manager.user_steps.update_profile(user, update_customer_profile_request)
 
-        user_dao = api_manager.database_steps.get_user_by_username(user_request.username)
+        user_dao = api_manager.database_steps.get_user_by_username(user.username)
         DaoAndModelAssertions.assert_that(update_response.customer, user_dao).match()
 
-    @pytest.mark.usefixtures('api_manager', 'user_request')
+    @pytest.mark.prepare_users(number=1)
     @pytest.mark.check_profile_name()
     @pytest.mark.parametrize('name',
                              [
@@ -50,11 +50,12 @@ class TestUpdateCustomerProfile(BaseTest):
                                  f'{RandomData.get_word()}.{RandomData.get_word()}',
                                  f'{RandomData.get_word()}  {RandomData.get_word()}',
                              ])
-    def test_update_customer_profile_incorrect_name(self, api_manager: ApiManager, user_request: CreateUserRequest,
+    def test_update_customer_profile_incorrect_name(self, api_manager: ApiManager, prepared_users,
                                                     name: str):
-        api_manager.user_steps.update_profile_using_invalid_data(user_request,
+        user = prepared_users[0]
+        api_manager.user_steps.update_profile_using_invalid_data(user,
                                                                  UpdateCustomerProfileRequest(name=name),
                                                                  'Name must contain two words with letters only')
 
-        user_dao = api_manager.database_steps.get_user_by_username(user_request.username)
+        user_dao = api_manager.database_steps.get_user_by_username(user.username)
         assert user_dao.name is None, f"Name should remain unchanged in DB after invalid update, but got: {user_dao.name!r}"

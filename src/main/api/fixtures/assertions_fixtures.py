@@ -8,6 +8,15 @@ from src.main.api.classes.api_manager import ApiManager
 from src.main.api.models.create_user_request import CreateUserRequest
 
 
+def _resolve_test_user(request: pytest.FixtureRequest) -> CreateUserRequest:
+    """Return the user under test: prepared_users[0] when @prepare_users marker is present, else user_request."""
+    if request.node.get_closest_marker("prepare_users") is not None:
+        prepared = request.getfixturevalue("prepared_users")
+        if prepared:
+            return prepared[0]
+    return request.getfixturevalue("user_request")
+
+
 def _resolve_source(request: pytest.FixtureRequest, source: str) -> Any:
     """
     Resolve "fixture_or_param.attr1.attr2" into a concrete value.
@@ -158,7 +167,7 @@ def check_accounts_change(request: pytest.FixtureRequest):
             pass
 
     api_manager: ApiManager = request.getfixturevalue("api_manager")
-    user_request: CreateUserRequest = request.getfixturevalue("user_request")
+    user_request: CreateUserRequest = _resolve_test_user(request)
 
     before = api_manager.user_steps.get_all_accounts(user_request)
 
@@ -192,7 +201,7 @@ def check_profile_name(request: pytest.FixtureRequest):
     expected_source: Optional[str] = mark.kwargs.get("expected_source")
 
     api_manager: ApiManager = request.getfixturevalue("api_manager")
-    user_request: CreateUserRequest = request.getfixturevalue("user_request")
+    user_request: CreateUserRequest = _resolve_test_user(request)
 
     before_name = api_manager.user_steps.get_profile(user_request).name
 
