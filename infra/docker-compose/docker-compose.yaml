@@ -18,7 +18,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   backend:
-    image: nobugsme/nbank:with_fraud_check
+    image: nobugsme/nbank:with_fraud_check_with_transfer_fix
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nbank
       SPRING_DATASOURCE_USERNAME: postgres
