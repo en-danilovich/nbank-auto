@@ -1,5 +1,3 @@
-import json
-
 import pytest
 import allure
 
@@ -8,6 +6,7 @@ from src.main.api.constants.error_messages import ErrorMessages
 from src.main.api.generators.random_data import RandomData
 from src.main.api.models.accounts.account_transfer_with_fraud_check_request import AccountTransferWithFraudCheckRequest
 from src.main.api.models.accounts.account_transfer_with_fraud_check_response import AccountTransferWithFraudCheckResponse
+from src.main.api.models.accounts.fraud_check_service_request import FraudCheckServiceRequest
 from src.main.api.fixtures.fraud_fixtures import FraudMockServer
 from src.main.api.fixtures.prepare_data_fixtures import PreparedUserAccount
 from src.main.api.requests.skeleton.endpoint import Endpoint
@@ -171,18 +170,16 @@ class TestTransferWithFraudCheck:
             )
             recorded = fraud_check_mock_server.calls[0]
             assert recorded["method"] == "POST", f"Fraud service was called with {recorded['method']}, expected POST"
-            payload = json.loads(recorded["body"])
-            assert payload["accountId"] == sender.account.id, (
-                f"Fraud service got senderAccountId={payload.get('accountId')}, expected {sender.account.id}"
+
+            actual_payload = fraud_check_mock_server.payloads[0]
+            expected_payload = FraudCheckServiceRequest(
+                accountId=sender.account.id,
+                relatedAccountId=receiver.account.id,
+                amount=transfer_amount,
+                transactionType="TRANSFER_OUT",
             )
-            assert payload["relatedAccountId"] == receiver.account.id, (
-                f"Fraud service got receiverAccountId={payload.get('relatedAccountId')}, expected {receiver.account.id}"
-            )
-            assert payload["amount"] == transfer_amount, (
-                f"Fraud service got amount={payload.get('amount')}, expected {transfer_amount}"
-            )
-            assert payload["transactionType"] == "TRANSFER_OUT", (
-                f"Fraud service got transactionType={payload.get('transactionType')}, expected TRANSFER_OUT"
+            assert actual_payload == expected_payload, (
+                f"Fraud service payload mismatch: expected {expected_payload}, got {actual_payload}"
             )
 
         with allure.step("Verify DB balances: APPROVED applies the transfer, MANUAL_REVIEW_REQUIRED does not"):

@@ -9,6 +9,8 @@ from typing import Any, Dict, List, Optional
 
 import pytest
 
+from src.main.api.models.accounts.fraud_check_service_request import FraudCheckServiceRequest
+
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +44,15 @@ class FraudMockServer:
     def call_count(self) -> int:
         with self._lock:
             return len(self._calls)
+
+    @property
+    def payloads(self) -> List[FraudCheckServiceRequest]:
+        with self._lock:
+            return [
+                FraudCheckServiceRequest.model_validate_json(c["body"])
+                for c in self._calls
+                if c["body"]
+            ]
 
 
 def _load_fraud_mock_config(request: pytest.FixtureRequest) -> Optional[FraudMockConfig]:
