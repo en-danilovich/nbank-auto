@@ -5,5 +5,5 @@ from src.main.api.models.base_model import BaseModel
 
 
 class AccountDepositRequest(BaseModel):
-    id: int
-    balance: Annotated[float | None | str, MinMaxFloatGeneratingRule(min=0.01, max=5000)]
+    accountId: int
+    amount: Annotated[float | None | str, MinMaxFloatGeneratingRule(min=0.01, max=5000)]

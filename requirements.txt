@@ -7,3 +7,4 @@ pytest-playwright
 faker
 pytest-xdist
 psycopg[binary]
+allure-pytest
