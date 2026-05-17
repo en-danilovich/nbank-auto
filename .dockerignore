@@ -1,0 +1,26 @@
+# --- VSC ---
+.gitignore
+.git
+
+# --- Python cache ---
+__pycache__/
+.pytest_cache/
+*.log
+
+# --- Virtualenv ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- Build artifacts ---
+build/
+dist/
+
+# --- IDE ---
+.idea/
+.vscode/
+.DS_Store
+.playwright-mcp/
+.claude/
+

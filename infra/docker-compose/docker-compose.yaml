@@ -23,7 +23,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nbank
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
-      FRAUD_DETECTION_SERVICE_URL: http://host.docker.internal:8080
+      FRAUD_DETECTION_SERVICE_URL: ${FRAUD_DETECTION_SERVICE_URL:-http://host.docker.internal:8080}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:

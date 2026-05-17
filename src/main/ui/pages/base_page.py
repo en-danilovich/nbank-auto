@@ -62,7 +62,7 @@ class BasePage(ABC):
         return self
 
     def expect_api_response(self, endpoint: Endpoint, status: int = 200):
-        api_url = f"{self.base_url}{Config.get('server_api_version')}{endpoint.value.url}"
+        api_url = f"{self.base_url}{Config.get('SERVER_API_VERSION')}{endpoint.value.url}"
         return self.page.expect_response(lambda res: res.url == api_url and res.status == status)
 
     def check_alert_message_and_accept(self: T, expected_text: str | list[str]) -> T:
