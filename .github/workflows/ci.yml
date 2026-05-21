@@ -78,7 +78,22 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Tag and push image to Docker Hub
+        id: push
         run: |
           REMOTE_IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/${IMAGE_NAME}:${{ steps.build.outputs.image_tag }}"
           docker tag "${{ steps.build.outputs.local_image }}" "${REMOTE_IMAGE}"
           docker push "${REMOTE_IMAGE}"
+          IMAGE_URL="https://hub.docker.com/r/${{ secrets.DOCKERHUB_USERNAME }}/${IMAGE_NAME}/tags?name=${{ steps.build.outputs.image_tag }}"
+          echo "remote_image=${REMOTE_IMAGE}" >> "${GITHUB_OUTPUT}"
+          echo "image_url=${IMAGE_URL}" >> "${GITHUB_OUTPUT}"
+          echo "Pushed image: ${REMOTE_IMAGE}"
+          echo "Docker Hub:   ${IMAGE_URL}"
+
+      - name: Publish image link to job summary
+        run: |
+          {
+            echo "### Pushed Docker image"
+            echo ""
+            echo "- Image: \`${{ steps.push.outputs.remote_image }}\`"
+            echo "- Docker Hub: [${{ steps.push.outputs.remote_image }}](${{ steps.push.outputs.image_url }})"
+          } >> "${GITHUB_STEP_SUMMARY}"
