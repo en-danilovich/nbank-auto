@@ -59,8 +59,10 @@ jobs:
           docker run --rm \
             --network "${NETWORK_NAME}" \
             --network-alias "${FRAUD_ALIAS}" \
-            -e APIBASEURL=http://backend:4111 \
-            -e UIBASEURL=http://frontend \
+            -e SERVER=http://backend:4111 \
+            -e UI_BASE_URL=http://frontend \
+            -e DB_HOST=postgres \
+            -e DB_PORT=5432 \
             "${{ steps.build.outputs.local_image }}" \
             pytest -m api --api-version with_fraud_check
 

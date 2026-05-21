@@ -14,15 +14,19 @@ set -uo pipefail
 #   COMPOSE_FILE     - path to compose file (default: infra/docker-compose/docker-compose.yaml)
 #   COMPOSE_PROJECT  - compose project name (default: docker-compose)
 #   TESTS_IMAGE      - tests image to run (default: edanilovich/nbank-tests:latest)
-#   APIBASEURL       - API URL passed to the tests container (default: http://backend:4111)
-#   UIBASEURL        - UI URL passed to the tests container  (default: http://frontend)
+#   SERVER           - API URL passed to the tests container (default: http://backend:4111)
+#   UI_BASE_URL      - UI URL passed to the tests container  (default: http://frontend)
+#   DB_HOST          - Postgres host inside the compose network (default: postgres)
+#   DB_PORT          - Postgres port inside the compose network (default: 5432)
 #   FRAUD_ALIAS      - network alias for tests container, used by backend (default: fraud-mock)
 
 COMPOSE_FILE="${COMPOSE_FILE:-infra/docker-compose/docker-compose.yaml}"
 COMPOSE_PROJECT="${COMPOSE_PROJECT:-docker-compose}"
 TESTS_IMAGE="${TESTS_IMAGE:-edanilovich/nbank-tests:latest}"
-APIBASEURL="${APIBASEURL:-http://backend:4111}"
-UIBASEURL="${UIBASEURL:-http://frontend}"
+SERVER="${SERVER:-http://backend:4111}"
+UI_BASE_URL="${UI_BASE_URL:-http://frontend}"
+DB_HOST="${DB_HOST:-postgres}"
+DB_PORT="${DB_PORT:-5432}"
 FRAUD_ALIAS="${FRAUD_ALIAS:-fraud-mock}"
 NETWORK_NAME="${COMPOSE_PROJECT}_nbank-network"
 
@@ -55,13 +59,16 @@ docker compose -p "${COMPOSE_PROJECT}" -f "${COMPOSE_FILE}" up -d --force-recrea
 
 log "Running tests in container ${TESTS_IMAGE}"
 log "  network=${NETWORK_NAME} alias=${FRAUD_ALIAS}"
-log "  APIBASEURL=${APIBASEURL}"
-log "  UIBASEURL=${UIBASEURL}"
+log "  SERVER=${SERVER}"
+log "  UI_BASE_URL=${UI_BASE_URL}"
+log "  DB_HOST=${DB_HOST} DB_PORT=${DB_PORT}"
 
 docker run --rm \
   --network "${NETWORK_NAME}" \
   --network-alias "${FRAUD_ALIAS}" \
-  -e APIBASEURL="${APIBASEURL}" \
-  -e UIBASEURL="${UIBASEURL}" \
+  -e SERVER="${SERVER}" \
+  -e UI_BASE_URL="${UI_BASE_URL}" \
+  -e DB_HOST="${DB_HOST}" \
+  -e DB_PORT="${DB_PORT}" \
   "${TESTS_IMAGE}" \
   pytest -m api --api-version with_fraud_check
