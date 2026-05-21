@@ -10,7 +10,7 @@ class RandomData:
     @staticmethod
     def get_username(length: int | None = None) -> str:
         return ''.join(faker.random_letters(length or random.randint(3, 15)))
-    
+
     @staticmethod
     def get_password() -> str:
         upper = [letter.upper() for letter in faker.random_letters(length=3)]

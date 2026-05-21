@@ -20,7 +20,7 @@ class ModelAssertions:
 
             if not result.is_success():
                 raise AssertionError(f'Model comparison failed with mismatches fields: \n{result.mismatches}')
-            
+
         else:
             raise AssertionError(f'No comparion rule found for class {self.request.__class__.__name__}')
         return self

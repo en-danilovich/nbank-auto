@@ -11,6 +11,7 @@ class GetCustomerAccount(BaseModel):
     balance: float
     transactions: List[Dict[str, Any]] = Field(default_factory=list)
 
+
 class GetCustomerProfileResponse(BaseModel):
     id: int
     username: str
@@ -18,5 +19,3 @@ class GetCustomerProfileResponse(BaseModel):
     name: str | None
     role: str
     accounts: List[GetCustomerAccount]
-
-

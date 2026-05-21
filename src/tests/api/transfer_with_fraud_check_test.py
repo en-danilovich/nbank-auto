@@ -4,8 +4,12 @@ import allure
 from src.main.api.classes.api_manager import ApiManager
 from src.main.api.constants.error_messages import ErrorMessages
 from src.main.api.generators.random_data import RandomData
-from src.main.api.models.accounts.account_transfer_with_fraud_check_request import AccountTransferWithFraudCheckRequest
-from src.main.api.models.accounts.account_transfer_with_fraud_check_response import AccountTransferWithFraudCheckResponse
+from src.main.api.models.accounts.account_transfer_with_fraud_check_request import (
+    AccountTransferWithFraudCheckRequest,
+)
+from src.main.api.models.accounts.account_transfer_with_fraud_check_response import (
+    AccountTransferWithFraudCheckResponse,
+)
 from src.main.api.models.accounts.fraud_check_service_request import FraudCheckServiceRequest
 from src.main.api.fixtures.fraud_fixtures import FraudMockServer
 from src.main.api.fixtures.prepare_data_fixtures import PreparedUserAccount
@@ -374,10 +378,13 @@ class TestTransferWithFraudCheck:
         sender_dao = api_manager.database_steps.get_account_by_account_number(sender.account.accountNumber)
         receiver_dao = api_manager.database_steps.get_account_by_account_number(receiver.account.accountNumber)
         assert sender_dao.balance == round(sender.account.balance - transfer_amount, 2), (
-            f"Sender DB balance mismatch: expected {sender.account.balance - transfer_amount}, got {sender_dao.balance}"
+            f"Sender DB balance mismatch: "
+            f"expected {sender.account.balance - transfer_amount}, got {sender_dao.balance}"
         )
-        assert receiver_dao.balance == round(receiver.account.balance + transfer_amount, 2), (
-            f"Receiver DB balance mismatch: expected {receiver.account.balance + transfer_amount}, got {receiver_dao.balance}"
+        expected_receiver_balance = round(receiver.account.balance + transfer_amount, 2)
+        assert receiver_dao.balance == expected_receiver_balance, (
+            f"Receiver DB balance mismatch: "
+            f"expected {receiver.account.balance + transfer_amount}, got {receiver_dao.balance}"
         )
 
     @pytest.mark.parametrize('transfer_amount', [

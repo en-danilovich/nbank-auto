@@ -19,11 +19,11 @@ class ComparisonRule:
     @property
     def response_class_name(self) -> str:
         return self._response_class_name
-    
+
     @property
     def field_mapping(self) -> Dict[str, str]:
         return self._field_mapping
-        
+
 
 class ModelComparisonConfigLoader:
     def __init__(self, config_file: str):
@@ -35,7 +35,7 @@ class ModelComparisonConfigLoader:
 
         if not os.path.exists(path):
             raise FileNotFoundError(f'Config file not found: {config_file}')
-        
+
         config = configparser.ConfigParser()
         config.optionxform = str
         config.read(path)

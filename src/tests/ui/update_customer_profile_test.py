@@ -7,6 +7,7 @@ from src.main.ui.pages.user_dashboard import UserDashboard
 from src.main.api.models.create_user_request import CreateUserRequest
 from src.main.api.models.customer.update_customer_profile_request import UpdateCustomerProfileRequest
 
+
 @pytest.mark.ui
 @pytest.mark.usefixtures("user_session_extension", "browser_match_guard")
 @pytest.mark.browsers('chrome')

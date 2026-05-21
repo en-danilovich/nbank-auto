@@ -27,6 +27,7 @@ def user_session_extension(request: pytest.FixtureRequest, page: Page, user_fact
 
     SessionStorage.clear()
 
+
 @pytest.fixture()
 def admin_session_autologin(request: pytest.FixtureRequest, page: Page, admin_user_request: CreateUserRequest):
     mark = request.node.get_closest_marker("admin_session")
@@ -34,6 +35,7 @@ def admin_session_autologin(request: pytest.FixtureRequest, page: Page, admin_us
         return
 
     LoginPage(page).auth_as_user(admin_user_request)
+
 
 @pytest.fixture()
 def browser_match_guard(request):

@@ -36,7 +36,7 @@ class RequestSpecs:
                 Endpoint.LOGIN_USER,
                 ResponseSpecs.request_returns_ok()
             ).post(LoginUserRequest(username=username, password=password))
-        except:
+        except Exception:
             logging.error(f"Authentication failed for {username}")
             raise Exception("Failed to authenticate user")
         else:

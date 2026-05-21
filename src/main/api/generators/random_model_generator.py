@@ -33,7 +33,7 @@ class RandomModelGenerator:
                 value = RandomModelGenerator._generate_value(actual_type)
 
             init_data[field_name] = value
-        
+
         return cls(**init_data)
 
     @staticmethod
@@ -48,7 +48,7 @@ class RandomModelGenerator:
     @staticmethod
     def _generate_float(min_val: float, max_val: float, right_digits=2) -> float:
         return faker.pyfloat(min_value=min_val, max_value=max_val, right_digits=right_digits)
-    
+
     @staticmethod
     def _generate_value(field_type: type) -> Any:
         if field_type is str:

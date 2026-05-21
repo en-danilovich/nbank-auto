@@ -58,4 +58,5 @@ class TestUpdateCustomerProfile(BaseTest):
                                                                  'Name must contain two words with letters only')
 
         user_dao = api_manager.database_steps.get_user_by_username(user.username)
-        assert user_dao.name is None, f"Name should remain unchanged in DB after invalid update, but got: {user_dao.name!r}"
+        assert user_dao.name is None, f"Name should remain unchanged in DB after invalid update, but got: {
+            user_dao.name!r}"

@@ -22,7 +22,7 @@ class AdminSteps(BaseSteps):
         self.created_objects.append(create_user_response)
 
         return create_user_response
-    
+
     def create_invalid_user(self, user_request: CreateUserRequest, error_key: str, error_value: str):
         CrudRequester(
             RequestSpecs.admin_auth_spec(),

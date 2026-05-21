@@ -23,8 +23,8 @@ class ValidatedCrudRequester(HttpRequest):
     def post(self, model: Optional[T] = None):
         response = self.crud_requester.post(model)
         return self._adapter.validate_python(response.json())
-    
-    def get(self, id: Optional[int] = None): 
+
+    def get(self, id: Optional[int] = None):
         response = self.crud_requester.get(id)
         return self._adapter.validate_python(response.json())
 

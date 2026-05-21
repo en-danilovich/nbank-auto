@@ -40,7 +40,8 @@ class TestAccountDeposit(BaseTest):
 
         account_dao = api_manager.database_steps.get_account_by_account_number(owner.account.accountNumber)
         assert account_dao.balance == owner.account.balance, (
-            f"DB balance changed after empty-balance deposit: expected {owner.account.balance}, got {account_dao.balance}"
+            f"DB balance changed after empty-balance deposit: "
+            f"expected {owner.account.balance}, got {account_dao.balance}"
         )
 
     @pytest.mark.prepare_users(number=1)
@@ -70,7 +71,8 @@ class TestAccountDeposit(BaseTest):
         current_balance = deposit_balance
 
         next_deposit = RandomData.get_deposit_balance()
-        deposit_response = api_manager.user_steps.deposit_money_to_account(owner.user, owner.account.id, next_deposit, current_balance)
+        deposit_response = api_manager.user_steps.deposit_money_to_account(
+            owner.user, owner.account.id, next_deposit, current_balance)
         api_manager.user_steps.verify_account_balance(owner.user, owner.account.id, deposit_balance + next_deposit)
 
         account_dao = api_manager.database_steps.get_account_by_account_number(owner.account.accountNumber)
@@ -83,7 +85,8 @@ class TestAccountDeposit(BaseTest):
         owner = prepared_user_accounts[0]
         deposit_balance = RandomData.get_deposit_balance()
         api_manager.user_steps.deposit_money_to_account(owner.user, owner.account.id, deposit_balance, 0.00)
-        deposit_response = api_manager.user_steps.deposit_money_to_account(owner.user, owner.account.id, deposit_balance, deposit_balance)
+        deposit_response = api_manager.user_steps.deposit_money_to_account(
+            owner.user, owner.account.id, deposit_balance, deposit_balance)
         api_manager.user_steps.verify_account_balance(owner.user, owner.account.id, deposit_balance * 2)
 
         account_dao = api_manager.database_steps.get_account_by_account_number(owner.account.accountNumber)
@@ -107,8 +110,8 @@ class TestAccountDeposit(BaseTest):
 
     @pytest.mark.prepare_users(number=1)
     def test_account_deposit_nonexisting_account(self, api_manager: ApiManager, prepared_users):
-        api_manager.user_steps.deposit_money_to_invalid_account(prepared_users[0],
-                                                                RandomModelGenerator.generate(AccountDepositRequest).accountId)
+        api_manager.user_steps.deposit_money_to_invalid_account(
+            prepared_users[0], RandomModelGenerator.generate(AccountDepositRequest).accountId)
 
     @pytest.mark.prepare_users(number=1)
     @pytest.mark.prepare_accounts(number=1)
