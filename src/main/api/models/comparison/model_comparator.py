@@ -15,11 +15,11 @@ class ComparisonResult:
 
     def is_success(self) -> bool:
         return not self.mismatches
-    
+
     @property
     def mismatches(self) -> List[Mismatch]:
-        return self._mismatches 
-    
+        return self._mismatches
+
 
 class ModelComparator:
     @staticmethod
@@ -32,7 +32,7 @@ class ModelComparator:
 
             if str(request_value) != str(response_value):
                 mismatches.append(Mismatch(f'{request_field} -> {response_field}', request_value, response_value))
-        
+
         return ComparisonResult(mismatches)
 
     @staticmethod

@@ -5,8 +5,12 @@ from src.main.api.models.accounts.account_deposit_request import AccountDepositR
 from src.main.api.models.accounts.account_deposit_response import AccountDepositResponse
 from src.main.api.models.accounts.account_transfer_request import AccountTransferRequest
 from src.main.api.models.accounts.account_transfer_response import AccountTransferResponse
-from src.main.api.models.accounts.account_transfer_with_fraud_check_request import AccountTransferWithFraudCheckRequest
-from src.main.api.models.accounts.account_transfer_with_fraud_check_response import AccountTransferWithFraudCheckResponse
+from src.main.api.models.accounts.account_transfer_with_fraud_check_request import (
+    AccountTransferWithFraudCheckRequest,
+)
+from src.main.api.models.accounts.account_transfer_with_fraud_check_response import (
+    AccountTransferWithFraudCheckResponse,
+)
 from typing import List
 
 from src.main.api.models.create_user_request import CreateUserRequest
@@ -64,7 +68,8 @@ class UserSteps(BaseSteps):
         if current_account_balance:
             expected_balance = round(current_account_balance + deposit_balance, 2)
             assert account_deposit_response.balance == expected_balance, (
-                f"Expected account balance is incorrect, expected {expected_balance}, but got {account_deposit_response.balance}"
+                f"Expected account balance is incorrect, expected {expected_balance}, "
+                f"but got {account_deposit_response.balance}"
             )
 
         assert account_deposit_response.depositAmount == account_deposit_request.amount, (
@@ -116,7 +121,11 @@ class UserSteps(BaseSteps):
             )
         ).post(account_deposit_request)
 
-    def update_profile(self, user_request: CreateUserRequest, update_customer_profile_request: UpdateCustomerProfileRequest) -> UpdateCustomerProfileResponse:
+    def update_profile(
+        self,
+        user_request: CreateUserRequest,
+        update_customer_profile_request: UpdateCustomerProfileRequest,
+    ) -> UpdateCustomerProfileResponse:
         update_customer_profile_response: UpdateCustomerProfileResponse = ValidatedCrudRequester(
             RequestSpecs.auth_as_user(user_request.username, user_request.password),
             Endpoint.UPDATE_CUSTOMER_PROFILE,
@@ -126,9 +135,9 @@ class UserSteps(BaseSteps):
         ModelAssertions(update_customer_profile_response.customer, user_request).match()
 
         assert update_customer_profile_response.message == "Profile updated successfully"
-        assert update_customer_profile_response.customer.name == update_customer_profile_request.name, (
-            f"Incorrect '{update_customer_profile_response.customer.username}' customer.name, expected '{update_customer_profile_request.name}'"
-        )
+        assert update_customer_profile_response.customer.name == update_customer_profile_request.name, (f"Incorrect '{
+            update_customer_profile_response.customer.username}' customer.name, expected '{
+            update_customer_profile_request.name}'")
 
         return update_customer_profile_response
 
@@ -141,7 +150,8 @@ class UserSteps(BaseSteps):
             ResponseSpecs.request_returns_bad_request_with_text(error_message)
         ).update(update_customer_profile_request)
 
-    def transfer_money_to_account(self, sender_user_request: CreateUserRequest, transfer_request: AccountTransferRequest) -> AccountTransferResponse:
+    def transfer_money_to_account(self, sender_user_request: CreateUserRequest,
+                                  transfer_request: AccountTransferRequest) -> AccountTransferResponse:
         transfer_response: AccountTransferResponse = ValidatedCrudRequester(
             RequestSpecs.auth_as_user(sender_user_request.username, sender_user_request.password),
             Endpoint.ACCOUNTS_TRANSFER,
@@ -162,8 +172,11 @@ class UserSteps(BaseSteps):
             ResponseSpecs.request_returns_bad_request_with_text(error_message)
         ).post(transfer_request)
 
-
-    def transfer_money_to_account_forbidden_action(self, user_request: CreateUserRequest, transfer_request: AccountTransferRequest):
+    def transfer_money_to_account_forbidden_action(
+        self,
+        user_request: CreateUserRequest,
+        transfer_request: AccountTransferRequest,
+    ):
         CrudRequester(
             RequestSpecs.auth_as_user(user_request.username, user_request.password),
             Endpoint.ACCOUNTS_TRANSFER,
@@ -189,7 +202,8 @@ class UserSteps(BaseSteps):
             f"\nUsername: '{user_request.username}'\nAccount ID: '{account_id}'"
         )
 
-    def _get_account_data_from_profile(self, profile: GetCustomerProfileResponse, account_id: int) -> Optional[GetCustomerAccount]:
+    def _get_account_data_from_profile(self, profile: GetCustomerProfileResponse,
+                                       account_id: int) -> Optional[GetCustomerAccount]:
         return next((acc for acc in profile.accounts if acc.id == account_id), None)
 
     def get_all_accounts(self, user_request: CreateUserRequest) -> List[CreateAccountResponse]:
@@ -230,7 +244,7 @@ class UserSteps(BaseSteps):
         ).post(transfer_request)
 
     def transfer_with_fraud_check_forbidden_action(self, user_request: CreateUserRequest,
-                                                    transfer_request: AccountTransferWithFraudCheckRequest):
+                                                   transfer_request: AccountTransferWithFraudCheckRequest):
         CrudRequester(
             RequestSpecs.auth_as_user(user_request.username, user_request.password),
             Endpoint.ACCOUNTS_TRANSFER_WITH_FRAUD_CHECK,

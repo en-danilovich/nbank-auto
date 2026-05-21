@@ -15,7 +15,7 @@ class CrudRequester(HttpRequest, CrudEndpointInterface):
     @property
     def base_url(self) -> str:
         return f"{Config.get('SERVER')}{Config.get('SERVER_API_VERSION')}"
-    
+
     def post(self, model: Optional[T] = None) -> requests.Response:
         body = model.model_dump() if model is not None else ''
 
@@ -27,7 +27,7 @@ class CrudRequester(HttpRequest, CrudEndpointInterface):
         self.response_spec(response)
         return response
 
-    def get(self, id: Optional[int] = None): 
+    def get(self, id: Optional[int] = None):
         response = requests.get(
             url=f'{self.base_url}{self.endpoint.value.url}{("/" + str(id)) if id is not None else ""}',
             headers=self.request_spec

@@ -10,16 +10,17 @@ from src.main.api.specs.response_specs import ResponseSpecs
 
 
 class AdminSteps(BaseSteps):
-    def create_user(self, user_request: CreateUserRequest = RandomModelGenerator.generate(CreateUserRequest)) -> CreateUserRequest:
+    def create_user(self, user_request: CreateUserRequest = RandomModelGenerator.generate(
+            CreateUserRequest)) -> CreateUserRequest:
         user_response = ValidatedCrudRequester(
             request_spec=RequestSpecs.admin_auth_spec(),
             endpoint=Endpoint.ADMIN_USER,
             response_spec=ResponseSpecs.entity_was_created()
         ).post(user_request)
-        
+
         self.created_objects.append(user_response)
         return user_request
-    
+
     def create_invalid_user(self, create_user_request: CreateUserRequest, error_key: str, error_value: str):
         return CrudRequester(
             RequestSpecs.admin_auth_spec(),

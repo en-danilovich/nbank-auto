@@ -12,6 +12,7 @@ from src.main.api.specs.request_specs import RequestSpecs
 
 T = TypeVar("T", bound="BasePage")
 
+
 class BasePage(ABC):
     def __init__(self, page: Page):
         self.page = page

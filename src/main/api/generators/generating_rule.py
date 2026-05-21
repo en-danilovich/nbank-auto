@@ -5,6 +5,7 @@ from dataclasses import dataclass
 class RegexGeneratingRule:
     regex: str
 
+
 @dataclass
 class MinMaxFloatGeneratingRule:
     min: float

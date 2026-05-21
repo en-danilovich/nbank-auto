@@ -1,5 +1,5 @@
 import pytest
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Page
 
 from src.main.ui.pages.admin_panel import AdminPanel
 from src.main.ui.pages.login_page import LoginPage
@@ -20,7 +20,7 @@ class TestLoginUser:
 
     @pytest.mark.usefixtures("user_request")
     def test_user_can_login_with_correct_data(self, page: Page, user_request: CreateUserRequest):
-         LoginPage(page).open() \
-            .login(user_request.username, user_request.password) \
-            .get_page(UserDashboard)\
-            .verify_page_is_visible()
+        LoginPage(page).open() \
+           .login(user_request.username, user_request.password) \
+           .get_page(UserDashboard)\
+           .verify_page_is_visible()

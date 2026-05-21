@@ -50,10 +50,11 @@ class TestAccountTransfer(BaseTest):
         assert sender_dao.balance == round(sender.account.balance - transfer_amount, 2), (
             f"Sender DB balance mismatch: expected {sender.account.balance - transfer_amount}, got {sender_dao.balance}"
         )
-        assert receiver_dao.balance == round(receiver.account.balance + transfer_amount, 2), (
-            f"Receiver DB balance mismatch: expected {receiver.account.balance + transfer_amount}, got {receiver_dao.balance}"
+        expected_receiver_balance = round(receiver.account.balance + transfer_amount, 2)
+        assert receiver_dao.balance == expected_receiver_balance, (
+            f"Receiver DB balance mismatch: "
+            f"expected {receiver.account.balance + transfer_amount}, got {receiver_dao.balance}"
         )
-
 
     @pytest.mark.prepare_users(number=2)
     @pytest.mark.prepare_accounts(number=2, deposit=5000)
@@ -75,11 +76,15 @@ class TestAccountTransfer(BaseTest):
 
         sender_dao = api_manager.database_steps.get_account_by_account_number(sender.account.accountNumber)
         receiver_dao = api_manager.database_steps.get_account_by_account_number(receiver.account.accountNumber)
-        assert sender_dao.balance == round(sender.account.balance - transfer_request.amount, 2), (
-            f"Sender DB balance mismatch: expected {sender.account.balance - transfer_request.amount}, got {sender_dao.balance}"
+        expected_sender_balance = round(sender.account.balance - transfer_request.amount, 2)
+        assert sender_dao.balance == expected_sender_balance, (
+            f"Sender DB balance mismatch: "
+            f"expected {sender.account.balance - transfer_request.amount}, got {sender_dao.balance}"
         )
-        assert receiver_dao.balance == round(receiver.account.balance + transfer_request.amount, 2), (
-            f"Receiver DB balance mismatch: expected {receiver.account.balance + transfer_request.amount}, got {receiver_dao.balance}"
+        expected_receiver_balance = round(receiver.account.balance + transfer_request.amount, 2)
+        assert receiver_dao.balance == expected_receiver_balance, (
+            f"Receiver DB balance mismatch: "
+            f"expected {receiver.account.balance + transfer_request.amount}, got {receiver_dao.balance}"
         )
 
     @pytest.mark.prepare_users(number=1)
@@ -172,8 +177,8 @@ class TestAccountTransfer(BaseTest):
 
     @pytest.mark.prepare_users(number=2)
     @pytest.mark.prepare_accounts(number=2)
-    def test_account_transfer_user_has_no_access_to_other_user_account(self, api_manager: ApiManager,
-                                                                       prepared_user_accounts: List[PreparedUserAccount]):
+    def test_account_transfer_user_has_no_access_to_other_user_account(
+            self, api_manager: ApiManager, prepared_user_accounts: List[PreparedUserAccount]):
         first = prepared_user_accounts[0]
         second = prepared_user_accounts[1]
         transfer_request = AccountTransferRequest(senderAccountId=first.account.id,

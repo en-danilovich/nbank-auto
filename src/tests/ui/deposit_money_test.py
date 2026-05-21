@@ -1,6 +1,6 @@
 from typing import List
 import pytest
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Page
 
 from src.main.api.classes.api_manager import ApiManager
 from src.main.api.generators.random_data import RandomData
@@ -9,11 +9,12 @@ from src.main.ui.pages.user_dashboard import UserDashboard
 from src.main.api.models.create_user_request import CreateUserRequest
 from src.main.api.models.create_account_response import CreateAccountResponse
 
+
 @pytest.mark.ui
 @pytest.mark.usefixtures("user_session_extension", "browser_match_guard")
 class TestDepositMoney:
     @pytest.mark.user_session(10)
-    def test_deposit_money_to_account(self, page: Page, api_manager:ApiManager, user_request: CreateUserRequest):
+    def test_deposit_money_to_account(self, page: Page, api_manager: ApiManager, user_request: CreateUserRequest):
         deposit_amount = RandomData.get_deposit_balance()
         user_dashboard = UserDashboard(page).open()
         account_number = user_dashboard.create_new_account()

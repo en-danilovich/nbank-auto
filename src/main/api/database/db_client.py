@@ -65,8 +65,8 @@ class Condition:
         conds = [c for c in conditions if c is not None]
         if not conds:
             raise ValueError("At least one condition is required")
-        sql = " AND ".join(f"({c.sql})" for c in conds) # (a = %s) AND (b = %s)
-        params: Tuple[Any, ...] = tuple(p for c in conds for p in c.params) # ("alex") (1, ) -> ("alex", 1)
+        sql = " AND ".join(f"({c.sql})" for c in conds)  # (a = %s) AND (b = %s)
+        params: Tuple[Any, ...] = tuple(p for c in conds for p in c.params)  # ("alex") (1, ) -> ("alex", 1)
         return Condition(sql=sql, params=params)
 
 

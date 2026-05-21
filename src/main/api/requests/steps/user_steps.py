@@ -17,7 +17,7 @@ class UserSteps(BaseSteps):
             Endpoint.ACCOUNTS,
             ResponseSpecs.entity_was_created()
         ).post(None)
-    
+
     def login(self, user_request: CreateUserRequest):
         response = CrudRequester(
             RequestSpecs.unauth_spec(),

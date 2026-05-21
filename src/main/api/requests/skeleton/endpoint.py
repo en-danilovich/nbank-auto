@@ -6,8 +6,12 @@ from src.main.api.models.accounts.account_deposit_request import AccountDepositR
 from src.main.api.models.accounts.account_deposit_response import AccountDepositResponse
 from src.main.api.models.accounts.account_transfer_request import AccountTransferRequest
 from src.main.api.models.accounts.account_transfer_response import AccountTransferResponse
-from src.main.api.models.accounts.account_transfer_with_fraud_check_request import AccountTransferWithFraudCheckRequest
-from src.main.api.models.accounts.account_transfer_with_fraud_check_response import AccountTransferWithFraudCheckResponse
+from src.main.api.models.accounts.account_transfer_with_fraud_check_request import (
+    AccountTransferWithFraudCheckRequest,
+)
+from src.main.api.models.accounts.account_transfer_with_fraud_check_response import (
+    AccountTransferWithFraudCheckResponse,
+)
 from src.main.api.models.create_account_response import CreateAccountResponse
 from src.main.api.models.create_user_request import CreateUserRequest
 from src.main.api.models.create_user_response import CreateUserResponse

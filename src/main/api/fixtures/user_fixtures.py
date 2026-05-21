@@ -20,15 +20,17 @@ def user_factory(api_manager: ApiManager):
 
     yield create_user
 
+
 @pytest.fixture(scope='function')
 def user_request(request, user_factory):
     if request.node.get_closest_marker("user_session") is not None:
         request.getfixturevalue("user_session_extension")
     try:
         return SessionStorage.get_user(0)
-    except:
+    except Exception:
         user = user_factory()
         return user
+
 
 @pytest.fixture
 def admin_user_request():
@@ -56,6 +58,7 @@ def users(request, api_manager: ApiManager) -> List[CreateUserRequest]:
 
     return created_users
 
+
 @pytest.fixture
 def accounts_with_balance(request, users, api_manager) -> List[UserAccountContext]:
     marker = request.node.get_closest_marker("with_users")
@@ -75,6 +78,7 @@ def accounts_with_balance(request, users, api_manager) -> List[UserAccountContex
         context_list.append(UserAccountContext(user=user_data, accounts=user_accounts))
 
     return context_list
+
 
 def deposit_balance(api_manager: ApiManager, create_user_request: CreateUserRequest,
                     account_id: int, balance: float, max_deposit: float = 5000):

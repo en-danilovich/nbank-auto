@@ -1,15 +1,18 @@
 import pytest
 
-from src.main.api.fixtures.user_fixtures import *
-from src.main.api.fixtures.api_fixtures import *
-from src.main.api.fixtures.object_fixtures import *
-from src.main.api.fixtures.setup_hook import *
-from src.main.api.fixtures.assertions_fixtures import *
-from src.main.api.fixtures.fraud_fixtures import *
-from src.main.api.fixtures.prepare_data_fixtures import *
+from src.main.api.fixtures.user_fixtures import *  # noqa: F401,F403
+from src.main.api.fixtures.api_fixtures import *  # noqa: F401,F403
+from src.main.api.fixtures.object_fixtures import *  # noqa: F401,F403
+from src.main.api.fixtures.setup_hook import *  # noqa: F401,F403
+from src.main.api.fixtures.assertions_fixtures import *  # noqa: F401,F403
+from src.main.api.fixtures.fraud_fixtures import *  # noqa: F401,F403
+from src.main.api.fixtures.prepare_data_fixtures import *  # noqa: F401,F403
+from src.main.api.classes.session_storage import SessionStorage
+from src.main.api.utils.helpers.browsers import norm_browser_name
 import os
 import time
 import random
+
 
 def _apply_global_seed(seed: int) -> None:
     random.seed(seed)
@@ -32,13 +35,19 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         "--seed",
         action="store",
         default=os.getenv("PYTEST_SEED"),
-        help="Seed for random generators. If not set, a new seed is generated per run (and shared across xdist workers).",
+        help=(
+            "Seed for random generators. If not set, a new seed is generated per run "
+            "(and shared across xdist workers)."
+        ),
     )
     parser.addoption(
         "--api-version",
         action="store",
         default=os.getenv("API_VERSION"),
-        help="Backend version under test. Used with @pytest.mark.api_version(...). Example: --api-version with_database",
+        help=(
+            "Backend version under test. Used with @pytest.mark.api_version(...). "
+            "Example: --api-version with_database"
+        ),
     )
 
 
@@ -86,6 +95,7 @@ def pytest_collection_finish(session: pytest.Session) -> None:
 
     _apply_global_seed(runtime_seed)
 
+
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
     preferred = "chromium"
 
@@ -123,6 +133,7 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
         filtered.append(item)
 
     items[:] = filtered
+
 
 @pytest.fixture(autouse=True, scope="function")
 def clear_storage():
