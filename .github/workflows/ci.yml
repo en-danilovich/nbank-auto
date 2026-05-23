@@ -77,18 +77,29 @@ jobs:
 
       - name: Generate Swagger coverage report
         if: always()
-        env:
-          # Override the swagger_url from swagger_coverage_config.yaml so the
-          # tool fetches the spec via the compose network hostname instead of
-          # the localhost default committed for local dev.
-          SWAGGER_COVERAGE_SERVICES: >-
-            [{"key":"nbank","name":"NoBugs Bank API","tags":["API"],"swagger_url":"http://backend:4111/v3/api-docs"}]
         run: |
+          # swagger-coverage-tool's YAML source wins over env vars, so we write
+          # a CI-specific YAML pointing at the in-network backend hostname and
+          # bind-mount it over the committed (localhost-default) one.
+          mkdir -p coverage-results
+          cat > coverage-results/ci-swagger-coverage-config.yaml <<'YAML'
+          services:
+            - key: "nbank"
+              name: "NoBugs Bank API"
+              tags: ["API"]
+              swagger_url: "http://backend:4111/v3/api-docs"
+          results_dir: "./coverage-results"
+          history_file: "./coverage-results/coverage-history.json"
+          history_retention_limit: 30
+          html_report_file: "./coverage-results/index.html"
+          json_report_file: "./coverage-results/coverage-report.json"
+          YAML
+
           NETWORK_NAME="${COMPOSE_PROJECT}_nbank-network"
           docker run --rm \
             --network "${NETWORK_NAME}" \
             -v "${{ github.workspace }}/coverage-results:/app/coverage-results" \
-            -e "SWAGGER_COVERAGE_SERVICES=${SWAGGER_COVERAGE_SERVICES}" \
+            -v "${{ github.workspace }}/coverage-results/ci-swagger-coverage-config.yaml:/app/swagger_coverage_config.yaml:ro" \
             --entrypoint swagger-coverage-tool \
             "${{ steps.build.outputs.local_image }}" \
             save-report
