@@ -14,6 +14,7 @@ from src.main.api.specs.response_specs import ResponseSpecs
 from src.tests.api.base_api_test import BaseTest
 
 
+@pytest.mark.api
 @pytest.mark.api_version("with_database")
 class TestAccountTransfer(BaseTest):
     def test_account_transfer_no_auth(self):
@@ -89,21 +90,24 @@ class TestAccountTransfer(BaseTest):
 
     @pytest.mark.prepare_users(number=1)
     @pytest.mark.prepare_accounts(number=2, deposit=15000)
-    @pytest.mark.parametrize('transfer_amount, error_message', [
-        (-0.01, ErrorMessages.INVALID_TRANSFER),
-        (0, ErrorMessages.INVALID_TRANSFER),
-        (10000.1, ErrorMessages.MAX_TRANSFER_AMOUNT_MSG),
+    @pytest.mark.parametrize('transfer_amount, error_key, error_message', [
+        (-0.01, "amount", "must be greater than 0"),
+        (0, "amount", "must be greater than 0"),
+        (10000.1, None, ErrorMessages.MAX_TRANSFER_AMOUNT_MSG),
     ])
     def test_account_transfer_invalid_transfer_amount(self, api_manager: ApiManager,
                                                       prepared_user_accounts: List[PreparedUserAccount],
                                                       transfer_amount: float,
+                                                      error_key: str | None,
                                                       error_message: str):
         first = prepared_user_accounts[0]
         second = prepared_user_accounts[1]
         transfer_request = AccountTransferRequest(senderAccountId=first.account.id,
                                                   receiverAccountId=second.account.id,
                                                   amount=transfer_amount)
-        api_manager.user_steps.transfer_money_to_account_invalid_data(first.user, transfer_request, error_message)
+        api_manager.user_steps.transfer_money_to_account_invalid_data(
+            first.user, transfer_request, error_message, error_key=error_key
+        )
         api_manager.user_steps.verify_account_balance(first.user, first.account.id, first.account.balance)
         api_manager.user_steps.verify_account_balance(first.user, second.account.id, second.account.balance)
 

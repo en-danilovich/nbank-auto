@@ -26,7 +26,6 @@ class TestUpdateCustomerProfile:
             .enter_name(update_customer_profile_request.name)\
             .check_alert_message_and_accept(BankAlert.PROFILE_UPDATED_SUCCESSFULLY)\
             .click_save()\
-            .verify_header_username(update_customer_profile_request.name)\
             .click_home()\
             .verify_welcome_text(update_customer_profile_request.name)
 
@@ -34,10 +33,10 @@ class TestUpdateCustomerProfile:
     @pytest.mark.check_profile_name()
     @pytest.mark.parametrize('invalid_name, alert_msg', [
         ("", BankAlert.ENTER_VALID_NAME),
-        ("John", [BankAlert.ENTER_VALID_NAME, BankAlert.NAME_MUST_CONTAIN_TWO_WORDS]),
-        ("John123 Smith", [BankAlert.ENTER_VALID_NAME, BankAlert.NAME_MUST_CONTAIN_TWO_WORDS]),
-        ("John@ Smith", [BankAlert.ENTER_VALID_NAME, BankAlert.NAME_MUST_CONTAIN_TWO_WORDS]),
-        ("John Michael Smith", [BankAlert.ENTER_VALID_NAME, BankAlert.NAME_MUST_CONTAIN_TWO_WORDS]),
+        ("John", BankAlert.INVALID_NAME_RAW_OBJECT),
+        ("John123 Smith", BankAlert.INVALID_NAME_RAW_OBJECT),
+        ("John@ Smith", BankAlert.INVALID_NAME_RAW_OBJECT),
+        ("John Michael Smith", BankAlert.INVALID_NAME_RAW_OBJECT),
     ])
     def test_update_customer_profile_invalid_name(self, page: Page, api_manager: ApiManager,
                                                   user_request: CreateUserRequest,

@@ -175,6 +175,6 @@ class TestAccountTransfer:
             .enter_recipient_account(account.accountNumber)\
             .enter_amount(transfer_amount)\
             .check_confirm()\
-            .check_alert_message_and_accept(BankAlert.get_transfer_success_msg(transfer_amount, account.accountNumber))\
+            .check_alert_message_and_accept(BankAlert.TRANSFER_TO_SAME_ACCOUNT)\
             .click_send()
         api_manager.user_steps.verify_account_balance(user_context.user, account.id, account.balance)

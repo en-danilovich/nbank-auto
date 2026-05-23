@@ -18,7 +18,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   backend:
-    image: nobugsme/nbank:with_fraud_check_with_transfer_fix
+    image: nobugsme/nbank:with_database_with_fix_with_swagger
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nbank
       SPRING_DATASOURCE_USERNAME: postgres
@@ -40,7 +40,7 @@ services:
       - nbank-network
 
   frontend:
-    image: nobugsme/nbank-ui:with_nginx
+    image: nobugsme/nbank-ui:with_nginx_with_send_transfer_fix
     ports:
       - "3000:80"
     depends_on:

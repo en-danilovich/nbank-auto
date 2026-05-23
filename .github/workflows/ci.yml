@@ -53,18 +53,68 @@ jobs:
         run: |
           docker compose -p "${COMPOSE_PROJECT}" -f "${COMPOSE_FILE}" up -d --wait
 
+      - name: Prepare coverage-results dir
+        run: |
+          rm -rf coverage-results
+          mkdir -p coverage-results
+          # Tests container runs as root and writes into the mount; make sure
+          # the runner user can also read it afterwards.
+          chmod 777 coverage-results
+
       - name: Run tests
         run: |
           NETWORK_NAME="${COMPOSE_PROJECT}_nbank-network"
           docker run --rm \
             --network "${NETWORK_NAME}" \
             --network-alias "${FRAUD_ALIAS}" \
+            -v "${{ github.workspace }}/coverage-results:/app/coverage-results" \
             -e SERVER=http://backend:4111 \
             -e UI_BASE_URL=http://frontend \
             -e DB_HOST=postgres \
             -e DB_PORT=5432 \
             "${{ steps.build.outputs.local_image }}" \
             pytest -m api --api-version with_fraud_check
+
+      - name: Generate Swagger coverage report
+        if: always()
+        run: |
+          NETWORK_NAME="${COMPOSE_PROJECT}_nbank-network"
+          docker run --rm \
+            --network "${NETWORK_NAME}" \
+            -v "${{ github.workspace }}/coverage-results:/app/coverage-results" \
+            --entrypoint swagger-coverage-tool \
+            "${{ steps.build.outputs.local_image }}" \
+            save-report
+
+      - name: Publish coverage summary to job summary
+        if: always()
+        run: |
+          REPORT="coverage-results/coverage-report.json"
+          if [[ ! -f "${REPORT}" ]]; then
+            echo "No coverage report found at ${REPORT}" >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+          python3 - <<'PY' >> "${GITHUB_STEP_SUMMARY}"
+          import json, pathlib
+          data = json.loads(pathlib.Path("coverage-results/coverage-report.json").read_text())
+          endpoints = data["servicesCoverage"]["nbank"]["endpoints"]
+          covered = sum(1 for e in endpoints if e["coverage"] == "COVERED")
+          total = len(endpoints)
+          print("### Swagger API coverage\n")
+          print(f"**{covered}/{total} endpoints covered**\n")
+          print("| Method | Path | Coverage | Cases |")
+          print("|---|---|---|---|")
+          for e in endpoints:
+              print(f"| {e['method']} | `{e['name']}` | {e['coverage']} | {e['totalCases']} |")
+          PY
+
+      - name: Upload Swagger coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: swagger-coverage-report
+          path: coverage-results/
+          if-no-files-found: warn
 
       - name: Stop Docker Compose
         if: always()

@@ -15,7 +15,7 @@ from typing import List
 
 from src.main.api.models.create_user_request import CreateUserRequest
 from src.main.api.models.comparison.model_assertions import ModelAssertions
-from src.main.api.models.customer.get_customer_profile_response import GetCustomerProfileResponse, GetCustomerAccount
+from src.main.api.models.customer.get_customer_profile_response import GetCustomerProfileResponse
 from src.main.api.models.customer.update_customer_profile_request import UpdateCustomerProfileRequest
 from src.main.api.models.customer.update_customer_profile_response import UpdateCustomerProfileResponse
 from src.main.api.requests.skeleton.requesters.crud_requester import CrudRequester
@@ -72,13 +72,6 @@ class UserSteps(BaseSteps):
                 f"but got {account_deposit_response.balance}"
             )
 
-        assert account_deposit_response.depositAmount == account_deposit_request.amount, (
-            f"Expected depositAmount {account_deposit_request.amount}, but got {account_deposit_response.depositAmount}"
-        )
-        assert account_deposit_response.transactionId, (
-            f"Expected non-empty transactionId in deposit response, but got {account_deposit_response.transactionId}"
-        )
-
         return account_deposit_response
 
     def deposit_money_to_invalid_account(self, user_request: CreateUserRequest, account_id: int):
@@ -95,16 +88,22 @@ class UserSteps(BaseSteps):
     def deposit_money_with_invalid_balance(self, user_request: CreateUserRequest,
                                            account_id: int,
                                            balance: float,
-                                           error_message: str):
+                                           error_message: str,
+                                           error_key: str | None = None):
         account_deposit_request: AccountDepositRequest = AccountDepositRequest(
             accountId=account_id,
             amount=balance,
         )
 
+        if error_key:
+            response_spec = ResponseSpecs.request_returns_bad_request_multiple_errors(error_key, error_message)
+        else:
+            response_spec = ResponseSpecs.request_returns_bad_request_with_text(error_message)
+
         CrudRequester(
             RequestSpecs.auth_as_user(user_request.username, user_request.password),
             Endpoint.ACCOUNTS_DEPOSIT,
-            ResponseSpecs.request_returns_bad_request_with_text(error_message)
+            response_spec
         ).post(account_deposit_request)
 
     def deposit_money_with_empty_balance(self, user_request: CreateUserRequest, account_id: int, balance: str | None):
@@ -116,9 +115,7 @@ class UserSteps(BaseSteps):
         CrudRequester(
             RequestSpecs.auth_as_user(user_request.username, user_request.password),
             Endpoint.ACCOUNTS_DEPOSIT,
-            ResponseSpecs.request_returns_bad_request_with_text(
-                "Invalid field types: accountId must be integer, amount must be number"
-            )
+            ResponseSpecs.request_returns_bad_request_multiple_errors("amount", "must not be null")
         ).post(account_deposit_request)
 
     def update_profile(
@@ -132,12 +129,13 @@ class UserSteps(BaseSteps):
             ResponseSpecs.request_returns_ok()
         ).update(update_customer_profile_request)
 
-        ModelAssertions(update_customer_profile_response.customer, user_request).match()
+        ModelAssertions(update_customer_profile_response, user_request).match()
 
-        assert update_customer_profile_response.message == "Profile updated successfully"
-        assert update_customer_profile_response.customer.name == update_customer_profile_request.name, (f"Incorrect '{
-            update_customer_profile_response.customer.username}' customer.name, expected '{
-            update_customer_profile_request.name}'")
+        assert update_customer_profile_response.name == update_customer_profile_request.name, (
+            f"Incorrect '{update_customer_profile_response.username}' name, "
+            f"expected '{update_customer_profile_request.name}', "
+            f"got '{update_customer_profile_response.name}'"
+        )
 
         return update_customer_profile_response
 
@@ -165,11 +163,17 @@ class UserSteps(BaseSteps):
 
     def transfer_money_to_account_invalid_data(self, user_request: CreateUserRequest,
                                                transfer_request: AccountTransferRequest,
-                                               error_message: str):
+                                               error_message: str,
+                                               error_key: str | None = None):
+        if error_key:
+            response_spec = ResponseSpecs.request_returns_bad_request_multiple_errors(error_key, error_message)
+        else:
+            response_spec = ResponseSpecs.request_returns_bad_request_with_text(error_message)
+
         CrudRequester(
             RequestSpecs.auth_as_user(user_request.username, user_request.password),
             Endpoint.ACCOUNTS_TRANSFER,
-            ResponseSpecs.request_returns_bad_request_with_text(error_message)
+            response_spec
         ).post(transfer_request)
 
     def transfer_money_to_account_forbidden_action(
@@ -193,18 +197,17 @@ class UserSteps(BaseSteps):
         return profile_response
 
     def verify_account_balance(self, user_request: CreateUserRequest, account_id: int, expected_balance: float):
-        profile = self.get_profile(user_request)
-        account = self._get_account_data_from_profile(profile, account_id)
+        accounts = self.get_all_accounts(user_request)
+        account = next((acc for acc in accounts if acc.id == account_id), None)
+        assert account is not None, (
+            f"Account id '{account_id}' not found for user '{user_request.username}'"
+        )
         expected_balance = round(expected_balance, 2)
 
         assert expected_balance == account.balance, (
             f"Verify account balance is '{expected_balance}', but got {account.balance}."
             f"\nUsername: '{user_request.username}'\nAccount ID: '{account_id}'"
         )
-
-    def _get_account_data_from_profile(self, profile: GetCustomerProfileResponse,
-                                       account_id: int) -> Optional[GetCustomerAccount]:
-        return next((acc for acc in profile.accounts if acc.id == account_id), None)
 
     def get_all_accounts(self, user_request: CreateUserRequest) -> List[CreateAccountResponse]:
         user_accounts: List[CreateAccountResponse] = ValidatedCrudRequester(

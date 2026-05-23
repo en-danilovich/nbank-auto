@@ -115,16 +115,20 @@ class TestAccountDeposit(BaseTest):
 
     @pytest.mark.prepare_users(number=1)
     @pytest.mark.prepare_accounts(number=1)
-    @pytest.mark.parametrize('balance, error_message', [
-        (-0.01, "Invalid account or amount"),
-        (0.00, "Invalid account or amount"),
-        (5000.01, "Deposit amount exceeds the 5000 limit"),
+    @pytest.mark.parametrize('balance, error_key, error_message', [
+        (-0.01, "amount", "must be greater than 0"),
+        (0.00, "amount", "must be greater than 0"),
+        (5000.01, None, "Deposit amount exceeds the 5000 limit"),
     ])
     def test_account_deposit_invalid_deposit_balance(self, api_manager: ApiManager,
                                                      prepared_user_accounts: List[PreparedUserAccount],
-                                                     balance: float | None, error_message: str):
+                                                     balance: float | None,
+                                                     error_key: str | None,
+                                                     error_message: str):
         owner = prepared_user_accounts[0]
-        api_manager.user_steps.deposit_money_with_invalid_balance(owner.user, owner.account.id, balance, error_message)
+        api_manager.user_steps.deposit_money_with_invalid_balance(
+            owner.user, owner.account.id, balance, error_message, error_key=error_key
+        )
         api_manager.user_steps.verify_account_balance(owner.user, owner.account.id, owner.account.balance)
 
         account_dao = api_manager.database_steps.get_account_by_account_number(owner.account.accountNumber)

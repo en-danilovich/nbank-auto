@@ -40,7 +40,7 @@ class Endpoint(Enum):
     ADMIN_DELETE_USER = EndpointConfig(
         url='/admin/users',
         request_model=None,
-        response_model=None
+        response_model=None,
     )
 
     ADMIN_GET_ALL_USERS = EndpointConfig(
