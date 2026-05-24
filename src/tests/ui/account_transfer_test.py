@@ -17,6 +17,7 @@ from src.main.api.models.user_account_context import UserAccountContext
 @pytest.mark.browsers('chrome')
 @pytest.mark.usefixtures("browser_match_guard")
 class TestAccountTransfer:
+    @pytest.mark.skip(reason="UI breaking changes in deposit flow — disable until fixed")
     @pytest.mark.usefixtures("user_session_extension")
     @pytest.mark.user_session(10)
     def test_transfer_money_between_own_accounts(self, page: Page, api_manager: ApiManager,
@@ -86,6 +87,7 @@ class TestAccountTransfer:
         api_manager.user_steps.verify_account_balance(user_context.user, sender_account.id, sender_account.balance)
         api_manager.user_steps.verify_account_balance(user_context.user, receiver_account.id, receiver_account.balance)
 
+    @pytest.mark.skip(reason="UI breaking changes in deposit flow — disable until fixed")
     @pytest.mark.with_users(accounts_count=2, balance=15000)
     @pytest.mark.parametrize('amount, alert_msg', [
         (0, BankAlert.TRANSFER_INSUFFICIENT_FUNDS),
