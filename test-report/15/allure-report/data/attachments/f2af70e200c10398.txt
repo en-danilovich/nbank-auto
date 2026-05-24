@@ -1,0 +1,45 @@
+Error occurred in event listener
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/site-packages/playwright/_impl/_connection.py", line 481, in dispatch
+    g.switch(self._replace_guids_with_channels(params))
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/playwright/_impl/_connection.py", line 472, in _listener_with_error_handler_attached
+    potential_future = listener(params)
+  File "/usr/local/lib/python3.13/site-packages/playwright/_impl/_browser_context.py", line 171, in <lambda>
+    "dialog", lambda params: self._on_dialog(from_channel(params["dialog"]))
+                             ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/playwright/_impl/_browser_context.py", line 679, in _on_dialog
+    has_listeners = page.emit(Page.Events.Dialog, dialog) or has_listeners
+                    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/pyee/asyncio.py", line 70, in emit
+    return super().emit(event, *args, **kwargs)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/pyee/base.py", line 220, in emit
+    handled = self._call_handlers(event, args, kwargs)
+  File "/usr/local/lib/python3.13/site-packages/pyee/base.py", line 196, in _call_handlers
+    self._emit_run(f, args, kwargs)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/pyee/asyncio.py", line 81, in _emit_run
+    self.emit("error", exc)
+    ~~~~~~~~~^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/pyee/asyncio.py", line 70, in emit
+    return super().emit(event, *args, **kwargs)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/pyee/base.py", line 223, in emit
+    self._emit_handle_potential_error(event, args[0] if args else None)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/pyee/base.py", line 181, in _emit_handle_potential_error
+    raise error
+  File "/usr/local/lib/python3.13/site-packages/pyee/asyncio.py", line 79, in _emit_run
+    coro: Any = f(*args, **kwargs)
+                ~^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/pyee/base.py", line 250, in g
+    return f(*args, **kwargs)
+  File "/usr/local/lib/python3.13/site-packages/playwright/_impl/_impl_to_api_mapping.py", line 123, in wrapper_func
+    return handler(
+        *list(map(lambda a: self.from_maybe_impl(a), args))[:arg_count]
+    )
+  File "/app/src/main/ui/pages/base_page.py", line 72, in _handler
+    assert any(c in d.message for c in candidates), f"Alert text mismatch: {d.message}"
+           ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Alert text mismatch: ❌ Failed to deposit. Please try again.
