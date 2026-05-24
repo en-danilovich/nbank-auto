@@ -161,6 +161,41 @@ jobs:
               print(f"| {e['method']} | `{e['name']}` | {e['coverage']} | {e['totalCases']} |")
           PY
 
+      - name: API coverage quality gate
+        if: always()
+        env:
+          MIN_COVERAGE: 50
+        run: |
+          REPORT="coverage-results/coverage-report.json"
+          if [[ ! -f "${REPORT}" ]]; then
+            echo "::error::No coverage report at ${REPORT} — cannot evaluate quality gate"
+            {
+              echo ""
+              echo "**Quality gate skipped:** no coverage report produced"
+            } >> "${GITHUB_STEP_SUMMARY}"
+            exit 1
+          fi
+          PCT=$(jq -r '
+            .servicesCoverage.nbank.endpoints
+            | (map(select(.coverage == "COVERED")) | length) as $covered
+            | length as $total
+            | if $total == 0 then 0 else ($covered * 100 / $total) end
+          ' "${REPORT}")
+          PCT_INT=${PCT%.*}
+          echo "API coverage: ${PCT}% (minimum required: ${MIN_COVERAGE}%)"
+          if (( PCT_INT < MIN_COVERAGE )); then
+            {
+              echo ""
+              echo "**Quality gate FAILED:** API coverage ${PCT}% is below required ${MIN_COVERAGE}%"
+            } >> "${GITHUB_STEP_SUMMARY}"
+            echo "::error::API coverage ${PCT}% is below required ${MIN_COVERAGE}%"
+            exit 1
+          fi
+          {
+            echo ""
+            echo "**Quality gate passed:** API coverage ${PCT}% >= ${MIN_COVERAGE}%"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
       - name: Upload Swagger coverage report
         if: always()
         uses: actions/upload-artifact@v4
