@@ -22,13 +22,13 @@ class TestCreateUser:
     @pytest.mark.parametrize(
         argnames='username, password, role, error_key, error_value',
         argvalues=[
-            ('', RandomData.get_password(), 'USER', 'username', 'Username cannot be blank'),
+            ('', RandomData.get_password(), 'USER', 'username', 'must not be blank'),
             ('ab', RandomData.get_password(), 'USER', 'username',
-             'Username must be between 3 and 15 characters'),
+             'size must be between 3 and 15'),
             ('qwertyuiopqwerty', RandomData.get_password(), 'USER', 'username',
-             'Username must be between 3 and 15 characters'),
+             'size must be between 3 and 15'),
             ('@john_doe', RandomData.get_password(), 'USER', 'username',
-             'Username must contain only letters, digits, dashes, underscores, and dots'),
+             'must match "^[\\w\\.\\-]+$"'),
         ],
     )
     @pytest.mark.usefixtures('api_manager')

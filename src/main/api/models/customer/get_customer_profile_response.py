@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 from pydantic import Field
 
@@ -15,7 +15,5 @@ class GetCustomerAccount(BaseModel):
 class GetCustomerProfileResponse(BaseModel):
     id: int
     username: str
-    password: str
     name: str | None
     role: str
-    accounts: List[GetCustomerAccount]

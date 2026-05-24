@@ -1,3 +1,4 @@
+import allure
 import pytest
 
 from src.main.api.fixtures.user_fixtures import *  # noqa: F401,F403
@@ -133,6 +134,22 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
         filtered.append(item)
 
     items[:] = filtered
+
+
+@pytest.hookimpl(hookwrapper=True, tryfirst=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    report = outcome.get_result()
+    if report.when != "call" or not report.failed:
+        return
+    page = item.funcargs.get("page")
+    if page is None:
+        return
+    try:
+        png = page.screenshot(full_page=True)
+    except Exception:
+        return
+    allure.attach(png, name="failure-screenshot", attachment_type=allure.attachment_type.PNG)
 
 
 @pytest.fixture(autouse=True, scope="function")

@@ -8,3 +8,4 @@ faker
 pytest-xdist
 psycopg[binary]
 allure-pytest
+swagger-coverage-tool

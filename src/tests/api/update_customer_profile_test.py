@@ -12,6 +12,7 @@ from src.main.api.specs.response_specs import ResponseSpecs
 from src.tests.api.base_api_test import BaseTest
 
 
+@pytest.mark.api
 @pytest.mark.api_version("with_database")
 class TestUpdateCustomerProfile(BaseTest):
     def test_update_customer_profile_no_auth(self):
@@ -32,7 +33,7 @@ class TestUpdateCustomerProfile(BaseTest):
         update_response = api_manager.user_steps.update_profile(user, update_customer_profile_request)
 
         user_dao = api_manager.database_steps.get_user_by_username(user.username)
-        DaoAndModelAssertions.assert_that(update_response.customer, user_dao).match()
+        DaoAndModelAssertions.assert_that(update_response, user_dao).match()
 
     @pytest.mark.prepare_users(number=1)
     @pytest.mark.check_profile_name()

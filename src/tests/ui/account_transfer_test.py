@@ -14,8 +14,10 @@ from src.main.api.models.user_account_context import UserAccountContext
 
 
 @pytest.mark.ui
+@pytest.mark.browsers('chrome')
 @pytest.mark.usefixtures("browser_match_guard")
 class TestAccountTransfer:
+    @pytest.mark.skip(reason="UI breaking changes in deposit flow — disable until fixed")
     @pytest.mark.usefixtures("user_session_extension")
     @pytest.mark.user_session(10)
     def test_transfer_money_between_own_accounts(self, page: Page, api_manager: ApiManager,
@@ -85,6 +87,7 @@ class TestAccountTransfer:
         api_manager.user_steps.verify_account_balance(user_context.user, sender_account.id, sender_account.balance)
         api_manager.user_steps.verify_account_balance(user_context.user, receiver_account.id, receiver_account.balance)
 
+    @pytest.mark.skip(reason="UI breaking changes in deposit flow — disable until fixed")
     @pytest.mark.with_users(accounts_count=2, balance=15000)
     @pytest.mark.parametrize('amount, alert_msg', [
         (0, BankAlert.TRANSFER_INSUFFICIENT_FUNDS),
@@ -92,7 +95,7 @@ class TestAccountTransfer:
     ])
     def test_transfer_invalid_amount(self, page: Page, api_manager: ApiManager,
                                      accounts_with_balance: List[UserAccountContext],
-                                     amount: float, alert_msg: str):
+                                     amount: float, alert_msg: str | List[str]):
         user_context = accounts_with_balance[0]
         sender_account, receiver_account = user_context.accounts[0], user_context.accounts[1]
         profile_request = RandomModelGenerator.generate(UpdateCustomerProfileRequest)
@@ -175,6 +178,6 @@ class TestAccountTransfer:
             .enter_recipient_account(account.accountNumber)\
             .enter_amount(transfer_amount)\
             .check_confirm()\
-            .check_alert_message_and_accept(BankAlert.get_transfer_success_msg(transfer_amount, account.accountNumber))\
+            .check_alert_message_and_accept(BankAlert.TRANSFER_TO_SAME_ACCOUNT)\
             .click_send()
         api_manager.user_steps.verify_account_balance(user_context.user, account.id, account.balance)

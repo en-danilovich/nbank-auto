@@ -1,0 +1,11 @@
+services:
+  - key: "nbank"
+    name: "NoBugs Bank API"
+    tags: ["API"]
+    swagger_url: "http://localhost:4111/v3/api-docs"
+
+results_dir: "./coverage-results"
+history_file: "./coverage-results/.history/coverage-history.json"
+history_retention_limit: 30
+html_report_file: "./coverage-results/index.html"
+json_report_file: "./coverage-results/coverage-report.json"

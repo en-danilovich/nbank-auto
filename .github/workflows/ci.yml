@@ -4,19 +4,25 @@ on:
   push:
     paths:
       - 'src/**'
-  pull_request:
-    paths:
-      - 'src/**'
 
 env:
   IMAGE_NAME: nbank-tests
   COMPOSE_FILE: infra/docker-compose/docker-compose.yaml
   COMPOSE_PROJECT: docker-compose
   FRAUD_ALIAS: fraud-mock
+  # Opt JS actions into Node.js 24 ahead of the June 2026 default switch.
+  # Silences the "Node.js 20 actions are deprecated" warning on actions like
+  # actions/upload-artifact@v4 that still ship a Node 20 runtime.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+
+    # `contents: write` lets peaceiris/actions-gh-pages push the
+    # coverage report history to the gh-pages branch.
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -53,18 +59,254 @@ jobs:
         run: |
           docker compose -p "${COMPOSE_PROJECT}" -f "${COMPOSE_FILE}" up -d --wait
 
+      - name: Checkout gh-pages history
+        if: always()
+        uses: actions/checkout@v5
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Prepare result dirs
+        run: |
+          rm -rf coverage-results allure-results allure-history
+          mkdir -p coverage-results allure-results
+          # Tests container runs as root and writes into the mounts; make sure
+          # the runner user can also read them afterwards.
+          chmod 777 coverage-results allure-results
+          # Seed swagger history under a subdir so it stays out of the
+          # tracker glob (results_dir/*.json), which would otherwise try to
+          # parse it as an EndpointCoverage record. First-ever run has no
+          # gh-pages branch, so this is a no-op then.
+          mkdir -p coverage-results/.history
+          if [[ -f gh-pages/coverage-history.json ]]; then
+            cp gh-pages/coverage-history.json coverage-results/.history/coverage-history.json
+          fi
+
       - name: Run tests
         run: |
           NETWORK_NAME="${COMPOSE_PROJECT}_nbank-network"
           docker run --rm \
             --network "${NETWORK_NAME}" \
             --network-alias "${FRAUD_ALIAS}" \
+            -v "${{ github.workspace }}/coverage-results:/app/coverage-results" \
+            -v "${{ github.workspace }}/allure-results:/app/allure-results" \
             -e SERVER=http://backend:4111 \
             -e UI_BASE_URL=http://frontend \
             -e DB_HOST=postgres \
             -e DB_PORT=5432 \
             "${{ steps.build.outputs.local_image }}" \
-            pytest -m api --api-version with_fraud_check
+            pytest --api-version with_database --alluredir=allure-results
+
+      - name: Generate Swagger coverage report
+        if: always()
+        run: |
+          # swagger-coverage-tool's YAML source wins over env vars, so we write
+          # a CI-specific YAML pointing at the in-network backend hostname and
+          # bind-mount it over the committed (localhost-default) one.
+          mkdir -p coverage-results
+          cat > coverage-results/ci-swagger-coverage-config.yaml <<'YAML'
+          services:
+            - key: "nbank"
+              name: "NoBugs Bank API"
+              tags: ["API"]
+              swagger_url: "http://backend:4111/v3/api-docs"
+          results_dir: "./coverage-results"
+          history_file: "./coverage-results/.history/coverage-history.json"
+          history_retention_limit: 30
+          html_report_file: "./coverage-results/index.html"
+          json_report_file: "./coverage-results/coverage-report.json"
+          YAML
+
+          NETWORK_NAME="${COMPOSE_PROJECT}_nbank-network"
+          docker run --rm \
+            --network "${NETWORK_NAME}" \
+            -v "${{ github.workspace }}/coverage-results:/app/coverage-results" \
+            -v "${{ github.workspace }}/coverage-results/ci-swagger-coverage-config.yaml:/app/swagger_coverage_config.yaml:ro" \
+            --entrypoint swagger-coverage-tool \
+            "${{ steps.build.outputs.local_image }}" \
+            save-report
+
+      - name: Generate Allure report
+        if: always()
+        uses: simple-elf/allure-report-action@v1.13
+        with:
+          allure_results: allure-results
+          gh_pages: gh-pages
+          allure_history: allure-history
+          subfolder: test-report
+          keep_reports: 30
+
+      - name: Publish coverage summary to job summary
+        if: always()
+        run: |
+          REPORT="coverage-results/coverage-report.json"
+          if [[ ! -f "${REPORT}" ]]; then
+            echo "No coverage report found at ${REPORT}" >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+          python3 - <<'PY' >> "${GITHUB_STEP_SUMMARY}"
+          import json, pathlib
+          data = json.loads(pathlib.Path("coverage-results/coverage-report.json").read_text())
+          endpoints = data["servicesCoverage"]["nbank"]["endpoints"]
+          covered = sum(1 for e in endpoints if e["coverage"] == "COVERED")
+          total = len(endpoints)
+          print("### Swagger API coverage\n")
+          print(f"**{covered}/{total} endpoints covered**\n")
+          print("| Method | Path | Coverage | Cases |")
+          print("|---|---|---|---|")
+          for e in endpoints:
+              print(f"| {e['method']} | `{e['name']}` | {e['coverage']} | {e['totalCases']} |")
+          PY
+
+      - name: API coverage quality gate
+        if: always()
+        env:
+          MIN_COVERAGE: 50
+        run: |
+          REPORT="coverage-results/coverage-report.json"
+          if [[ ! -f "${REPORT}" ]]; then
+            echo "::error::No coverage report at ${REPORT} — cannot evaluate quality gate"
+            {
+              echo ""
+              echo "**Quality gate skipped:** no coverage report produced"
+            } >> "${GITHUB_STEP_SUMMARY}"
+            exit 1
+          fi
+          PCT=$(jq -r '
+            .servicesCoverage.nbank.endpoints
+            | (map(select(.coverage == "COVERED")) | length) as $covered
+            | length as $total
+            | if $total == 0 then 0 else ($covered * 100 / $total) end
+          ' "${REPORT}")
+          PCT_INT=${PCT%.*}
+          echo "API coverage: ${PCT}% (minimum required: ${MIN_COVERAGE}%)"
+          if (( PCT_INT < MIN_COVERAGE )); then
+            {
+              echo ""
+              echo "**Quality gate FAILED:** API coverage ${PCT}% is below required ${MIN_COVERAGE}%"
+            } >> "${GITHUB_STEP_SUMMARY}"
+            echo "::error::API coverage ${PCT}% is below required ${MIN_COVERAGE}%"
+            exit 1
+          fi
+          {
+            echo ""
+            echo "**Quality gate passed:** API coverage ${PCT}% >= ${MIN_COVERAGE}%"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Upload Swagger coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: swagger-coverage-report
+          path: coverage-results/
+          if-no-files-found: warn
+
+      - name: Upload Allure report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-history/test-report/${{ github.run_number }}/
+          if-no-files-found: warn
+
+      - name: Stage reports for GitHub Pages
+        if: always()
+        run: |
+          # gh-pages dir exists if the branch was checked out; otherwise create
+          # a fresh site root (first-ever publish).
+          mkdir -p gh-pages
+          # Drop the .git dir from the checkout — peaceiris does its own commit.
+          rm -rf gh-pages/.git
+
+          RUN_DIR="gh-pages/test-report/${{ github.run_number }}"
+          mkdir -p "${RUN_DIR}"
+
+          # 1. Allure report → test-report/<n>/allure-report/
+          REPORT_SRC="allure-history/test-report/${{ github.run_number }}"
+          if [[ -d "${REPORT_SRC}" ]]; then
+            mkdir -p "${RUN_DIR}/allure-report"
+            cp -r "${REPORT_SRC}/." "${RUN_DIR}/allure-report/"
+          fi
+
+          # 2. Swagger coverage → test-report/<n>/swagger-coverage/
+          if [[ -d coverage-results ]]; then
+            mkdir -p "${RUN_DIR}/swagger-coverage"
+            # Copy the report HTML/JSON but not the raw per-request JSON files
+            # (those are noise and bloat the published site).
+            for f in index.html coverage-report.json; do
+              if [[ -f "coverage-results/${f}" ]]; then
+                cp "coverage-results/${f}" "${RUN_DIR}/swagger-coverage/${f}"
+              fi
+            done
+          fi
+
+          # Persist swagger coverage history at the site root so the next run
+          # seeds save-report from it.
+          if [[ -f coverage-results/.history/coverage-history.json ]]; then
+            cp coverage-results/.history/coverage-history.json gh-pages/coverage-history.json
+          fi
+
+          # Regenerate landing page: newest run first, links to both sub-reports.
+          python3 - <<'PY' > gh-pages/index.html
+          import os
+          tr = os.path.join("gh-pages", "test-report")
+          runs = []
+          if os.path.isdir(tr):
+              runs = sorted(
+                  (int(d) for d in os.listdir(tr)
+                   if d.isdigit() and os.path.isdir(os.path.join(tr, d))),
+                  reverse=True,
+              )
+
+          def link(run, kind):
+              path = f"test-report/{run}/{kind}/index.html"
+              full = os.path.join("gh-pages", path)
+              return f"<a href='{path}'>{kind}</a>" if os.path.isfile(full) else f"<span style='color:#999'>{kind} (missing)</span>"
+
+          print("<!doctype html>")
+          print("<meta charset='utf-8'>")
+          print("<title>Test reports history</title>")
+          print("<style>body{font-family:system-ui,sans-serif;max-width:760px;margin:2rem auto;padding:0 1rem}"
+                "h1{margin-bottom:.25rem}h2{margin-top:2rem}table{border-collapse:collapse;width:100%}"
+                "td,th{padding:.4rem .8rem;border-bottom:1px solid #eee;text-align:left}</style>")
+          print("<h1>Test reports</h1>")
+          if not runs:
+              print("<p>No runs published yet.</p>")
+          else:
+              latest = runs[0]
+              print(f"<p>Latest run: <strong>#{latest}</strong> — "
+                    f"{link(latest, 'allure-report')} &nbsp;·&nbsp; {link(latest, 'swagger-coverage')}</p>")
+              print("<h2>All runs</h2>")
+              print("<table><thead><tr><th>Run</th><th>Allure</th><th>Swagger coverage</th></tr></thead><tbody>")
+              for r in runs:
+                  print(f"<tr><td>#{r}</td><td>{link(r, 'allure-report')}</td><td>{link(r, 'swagger-coverage')}</td></tr>")
+              print("</tbody></table>")
+          PY
+
+      - name: Publish coverage report to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: gh-pages
+          keep_files: false  # gh-pages dir already contains the full history from the checkout
+          commit_message: "docs(coverage): publish run #${{ github.run_number }}"
+
+      - name: Publish report links to job summary
+        if: always()
+        run: |
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          BASE="https://${GITHUB_REPOSITORY_OWNER}.github.io/${REPO_NAME}"
+          RUN_BASE="${BASE}/test-report/${{ github.run_number }}"
+          {
+            echo ""
+            echo "### Published reports"
+            echo ""
+            echo "- Allure report: [${RUN_BASE}/allure-report/](${RUN_BASE}/allure-report/)"
+            echo "- Swagger coverage: [${RUN_BASE}/swagger-coverage/](${RUN_BASE}/swagger-coverage/)"
+            echo "- All runs: [${BASE}/](${BASE}/)"
+          } >> "${GITHUB_STEP_SUMMARY}"
 
       - name: Stop Docker Compose
         if: always()
