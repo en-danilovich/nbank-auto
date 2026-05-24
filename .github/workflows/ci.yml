@@ -76,11 +76,13 @@ jobs:
           # Tests container runs as root and writes into the mounts; make sure
           # the runner user can also read them afterwards.
           chmod 777 coverage-results allure-results
-          # Seed the swagger results dir with the previous run's history so
-          # save-report appends to it instead of starting fresh. First-ever
-          # run has no gh-pages branch, so this is a no-op then.
+          # Seed swagger history under a subdir so it stays out of the
+          # tracker glob (results_dir/*.json), which would otherwise try to
+          # parse it as an EndpointCoverage record. First-ever run has no
+          # gh-pages branch, so this is a no-op then.
+          mkdir -p coverage-results/.history
           if [[ -f gh-pages/coverage-history.json ]]; then
-            cp gh-pages/coverage-history.json coverage-results/coverage-history.json
+            cp gh-pages/coverage-history.json coverage-results/.history/coverage-history.json
           fi
 
       - name: Run tests
@@ -112,7 +114,7 @@ jobs:
               tags: ["API"]
               swagger_url: "http://backend:4111/v3/api-docs"
           results_dir: "./coverage-results"
-          history_file: "./coverage-results/coverage-history.json"
+          history_file: "./coverage-results/.history/coverage-history.json"
           history_retention_limit: 30
           html_report_file: "./coverage-results/index.html"
           json_report_file: "./coverage-results/coverage-report.json"
@@ -199,7 +201,7 @@ jobs:
             mkdir -p "${RUN_DIR}/swagger-coverage"
             # Copy the report HTML/JSON but not the raw per-request JSON files
             # (those are noise and bloat the published site).
-            for f in index.html coverage-report.json coverage-history.json; do
+            for f in index.html coverage-report.json; do
               if [[ -f "coverage-results/${f}" ]]; then
                 cp "coverage-results/${f}" "${RUN_DIR}/swagger-coverage/${f}"
               fi
@@ -208,8 +210,8 @@ jobs:
 
           # Persist swagger coverage history at the site root so the next run
           # seeds save-report from it.
-          if [[ -f coverage-results/coverage-history.json ]]; then
-            cp coverage-results/coverage-history.json gh-pages/coverage-history.json
+          if [[ -f coverage-results/.history/coverage-history.json ]]; then
+            cp coverage-results/.history/coverage-history.json gh-pages/coverage-history.json
           fi
 
           # Regenerate landing page: newest run first, links to both sub-reports.
