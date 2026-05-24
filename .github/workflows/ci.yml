@@ -96,7 +96,7 @@ jobs:
             -e DB_HOST=postgres \
             -e DB_PORT=5432 \
             "${{ steps.build.outputs.local_image }}" \
-            pytest -m api --api-version with_database --alluredir=allure-results
+            pytest --api-version with_database --alluredir=allure-results
 
       - name: Generate Swagger coverage report
         if: always()
@@ -258,6 +258,21 @@ jobs:
           publish_dir: gh-pages
           keep_files: false  # gh-pages dir already contains the full history from the checkout
           commit_message: "docs(coverage): publish run #${{ github.run_number }}"
+
+      - name: Publish report links to job summary
+        if: always()
+        run: |
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          BASE="https://${GITHUB_REPOSITORY_OWNER}.github.io/${REPO_NAME}"
+          RUN_BASE="${BASE}/test-report/${{ github.run_number }}"
+          {
+            echo ""
+            echo "### Published reports"
+            echo ""
+            echo "- Allure report: [${RUN_BASE}/allure-report/](${RUN_BASE}/allure-report/)"
+            echo "- Swagger coverage: [${RUN_BASE}/swagger-coverage/](${RUN_BASE}/swagger-coverage/)"
+            echo "- All runs: [${BASE}/](${BASE}/)"
+          } >> "${GITHUB_STEP_SUMMARY}"
 
       - name: Stop Docker Compose
         if: always()
