@@ -22,9 +22,9 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
-    #
-    permissions: `contents: write` lets peaceiris/actions-gh-pages push the
+    # `contents: write` lets peaceiris/actions-gh-pages push the
     # coverage report history to the gh-pages branch.
+    permissions:
       contents: write
 
     steps:
