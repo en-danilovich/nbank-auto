@@ -14,6 +14,7 @@ from src.main.api.models.user_account_context import UserAccountContext
 
 
 @pytest.mark.ui
+@pytest.mark.browsers('chrome')
 @pytest.mark.usefixtures("browser_match_guard")
 class TestAccountTransfer:
     @pytest.mark.usefixtures("user_session_extension")
@@ -92,7 +93,7 @@ class TestAccountTransfer:
     ])
     def test_transfer_invalid_amount(self, page: Page, api_manager: ApiManager,
                                      accounts_with_balance: List[UserAccountContext],
-                                     amount: float, alert_msg: str):
+                                     amount: float, alert_msg: str | List[str]):
         user_context = accounts_with_balance[0]
         sender_account, receiver_account = user_context.accounts[0], user_context.accounts[1]
         profile_request = RandomModelGenerator.generate(UpdateCustomerProfileRequest)
