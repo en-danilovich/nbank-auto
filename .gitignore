@@ -220,3 +220,7 @@ __marimo__/
 .playwright-mcp/
 reporting.html
 testing_with_mocks_extracted.txt
+
+# local-only Kibana dashboard (generator + generated NDJSON)
+resources/analitics-results/_build_kibana_dashboard.py
+resources/analitics-results/kibana-nbank-dashboard.ndjson
