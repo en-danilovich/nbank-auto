@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          env:
+            - name: POSTGRES_DB
+              value: nbank
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: postgres
+          ports:
+            - containerPort: 5432
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres", "-d", "nbank"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 5
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        # Эфемерное хранилище: данные живут только пока жив под (для dev/тестов это ок).
+        # Для постоянного хранения замени на PersistentVolumeClaim.
+        - name: pgdata
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    app: postgres
+spec:
+  selector:
+    app: postgres
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+      nodePort: 30543
+  # NodePort: бэкенд ходит в БД внутри кластера по ClusterIP, а наружу её
+  # публикуем для локальных тестов (api_version=with_database обращается к БД).
+  # На minikube/docker до NodePort локально добираемся через port-forward
+  # (см. kube_up.sh: start_pf postgres svc/postgres 5433:5432) — так localhost:5433
+  # из resources/config.properties работает единообразно с остальными сервисами.
+  type: NodePort

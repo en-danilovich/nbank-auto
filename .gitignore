@@ -211,3 +211,12 @@ __marimo__/
 .idea
 .idea/workspace.xml
 .idea/
+
+# kube runtime artifacts (создаются kube_up.sh / kube_down.sh)
+.pf-pids
+.pf-logs/
+
+# test / tooling artifacts
+.playwright-mcp/
+reporting.html
+testing_with_mocks_extracted.txt
