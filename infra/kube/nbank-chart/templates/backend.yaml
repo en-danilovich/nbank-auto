@@ -13,14 +13,22 @@ spec:
         app: backend # устанавливаем label на Pod
       annotations:
         co.elastic.logs/enabled: "true"
-        co.elastic.logs/module: springboot
         co.elastic.logs/json.keys_under_root: "true"
         co.elastic.logs/json.add_error_key: "true"
     spec:
       containers:
         - name: backend
-          image: nobugsme/nbank:with_validation_fix
+          image: nobugsme/nbank:with_database_with_fix_with_swagger
           imagePullPolicy: Always
+          env:
+            # Образ with_database ожидает внешний Postgres. Внутри пода localhost:5432
+            # пуст — указываем на Service "postgres" (DNS-имя внутри namespace).
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres:5432/nbank
+            - name: SPRING_DATASOURCE_USERNAME
+              value: postgres
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: postgres
           ports:
             - containerPort: 4111
 ---
@@ -49,4 +57,4 @@ spec:
 #  |
 #  [Pod / Контейнер port 4111]
 #  |
-#  nobugsme/nbank:with_validation_fix
+#  nobugsme/nbank:with_database_with_fix_with_swagger

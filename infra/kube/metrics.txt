@@ -1,0 +1,12 @@
+user_created_total
+transfer_started_total
+transfer_success_total
+transfer_failed_total
+admin_user_deleted_total
+admin_user_listed_total
+account_created_total
+account_transactions_viewed_total
+customer_profile_fetched_total
+customer_profile_updated_total
+customer_accounts_fetched_total
+user_login_total

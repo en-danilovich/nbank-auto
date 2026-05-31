@@ -26,7 +26,14 @@ def _dsn() -> str:
     dbname = str(Config.get("DB_NAME", "nbank"))
     user = str(Config.get("DB_USERNAME", "postgres"))
     password = str(Config.get("DB_PASSWORD", "postgres"))
-    return f"host={host} port={port} dbname={dbname} user={user} password={password}"
+    # connect_timeout: без него psycopg.connect блокируется на TCP-таймауте ОС,
+    # если БД недоступна (нет port-forward / под не поднялся) — тесты "зависают".
+    # С таймаутом получаем быстрый и понятный OperationalError.
+    timeout = int(Config.get("DB_CONNECT_TIMEOUT", 5))
+    return (
+        f"host={host} port={port} dbname={dbname} "
+        f"user={user} password={password} connect_timeout={timeout}"
+    )
 
 
 @contextmanager

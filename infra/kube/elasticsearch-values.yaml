@@ -1,0 +1,45 @@
+# Значения для чарта elastic/elasticsearch (pin: 7.17.3) под локальный minikube.
+# Один узел, security выключен для простоты локальной разработки
+# (как и Grafana/Prometheus в этом проекте поднимаются без авторизации).
+
+# Один под Elasticsearch (single-node кластер)
+replicas: 1
+minimumMasterNodes: 1
+
+# Имя сервиса по умолчанию: elasticsearch-master(:9200)
+clusterName: "elasticsearch"
+
+# Для single-node кластера достаточно статуса yellow
+clusterHealthCheckParams: "wait_for_status=yellow&timeout=5s"
+
+# Выключаем x-pack security: локально не нужны TLS/пароли,
+# Kibana и Filebeat ходят по http без креденшелов
+esConfig:
+  elasticsearch.yml: |
+    xpack.security.enabled: false
+
+# На одной ноде minikube жёсткая anti-affinity невозможна
+antiAffinity: "soft"
+
+# Память JVM (должна быть ~= половине лимита памяти контейнера)
+esJavaOpts: "-Xms1g -Xmx1g"
+
+# Скромные ресурсы под minikube
+resources:
+  requests:
+    cpu: "500m"
+    memory: "1536Mi"
+  limits:
+    cpu: "1000m"
+    memory: "2Gi"
+
+# Небольшой PVC под данные (minikube создаст через стандартный StorageClass)
+volumeClaimTemplate:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi
+
+# Init-контейнер выставляет vm.max_map_count=262144 (требование ES)
+sysctlInitContainer:
+  enabled: true

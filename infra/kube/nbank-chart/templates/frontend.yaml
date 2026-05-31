@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: nobugsme/nbank-ui:with_nginx
+          image: nobugsme/nbank-ui:with_nginx_with_send_transfer_fix
           ports:
             - containerPort: 80
 ---
@@ -58,6 +58,6 @@ spec:
 #  ▼
 #  ┌─────────────────────────────────────────────┐
 #  │         [Контейнер в Pod]                   │
-#  │   image: nobugsme/nbank-ui:with_nginx       │
+#  │   image: nobugsme/nbank-ui:with_nginx_with_send_transfer_fix │
 #  │   containerPort: 80                         │
 #  └─────────────────────────────────────────────┘

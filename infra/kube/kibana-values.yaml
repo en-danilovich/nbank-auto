@@ -1,0 +1,20 @@
+# Значения для чарта elastic/kibana (pin: 7.17.3) под локальный minikube.
+
+# Подключение к Elasticsearch (сервис из чарта elasticsearch, security выключен -> http)
+elasticsearchHosts: "http://elasticsearch-master:9200"
+
+# Открываем UI наружу через NodePort (порт пробрасываем в restart_kube.sh)
+service:
+  type: NodePort
+
+# Скромные ресурсы под minikube
+resources:
+  requests:
+    cpu: "250m"
+    memory: "512Mi"
+  limits:
+    cpu: "1000m"
+    memory: "1Gi"
+
+# Ждём готовности Elasticsearch подольше (медленный старт на minikube)
+healthCheckPath: "/app/kibana"
