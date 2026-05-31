@@ -1,0 +1,43 @@
+# Значения для чарта elastic/filebeat (pin: 7.17.3) под локальный minikube.
+#
+# Filebeat запускается как DaemonSet на каждой ноде, читает логи контейнеров из
+# /var/log/containers/*.log и через autodiscover + hints отправляет их в Elasticsearch.
+#
+# Это и есть "отправка логов приложения в Elasticsearch": Filebeat подхватывает
+# аннотации пода backend (co.elastic.logs/* в nbank-chart/templates/backend.yaml)
+# и форвардит логи в наш кластер ES.
+
+daemonset:
+  filebeatConfig:
+    filebeat.yml: |
+      filebeat.autodiscover:
+        providers:
+          - type: kubernetes
+            node: ${NODE_NAME}
+            # Включаем hints: Filebeat читает аннотации co.elastic.logs/* на подах
+            hints.enabled: true
+            hints.default_config:
+              type: container
+              paths:
+                - /var/log/containers/*${data.kubernetes.container.id}.log
+
+      processors:
+        # Обогащаем события метаданными k8s (namespace, pod, labels и т.п.)
+        - add_kubernetes_metadata:
+            host: ${NODE_NAME}
+            matchers:
+              - logs_path:
+                  logs_path: "/var/log/containers/"
+
+      # Сервис ES из чарта elasticsearch (тот же namespace logging)
+      output.elasticsearch:
+        hosts: ["elasticsearch-master:9200"]
+
+# Скромные ресурсы под minikube
+resources:
+  requests:
+    cpu: "100m"
+    memory: "100Mi"
+  limits:
+    cpu: "500m"
+    memory: "300Mi"
